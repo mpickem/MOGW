@@ -1,0 +1,10 @@
+# object files from ifort
+*.o
+# module files from ifort
+*.mod
+# vim files
+~
+# binary
+gw
+indizes/
+output/

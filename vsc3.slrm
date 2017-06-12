@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH -J GW_MO
+#SBATCH --ntasks-per-node=16
+#SBATCH --partition=mem_0064
+#SBATCH --qos=normal_0064
+#SBATCH --time=10:00:00
+
+module purge
+module load intel/17.0.4
+module load intel-mpi/2017.3
+module load intel-mkl/2017.3
+
+# Required by srun; see https://wiki.vsc.ac.at/doku.php?id=doku:slurm
+export I_MPI_PMI_LIBRARY=/cm/shared/apps/slurm/current/lib/libpmi.so
+
+#trap '' USR1 USR2
+#LD_PRELOAD= ~/opt/lib/libnfft3.so
+srun ./gw_MO > gwmo-$SLURM_JOB_ID.log 2>&1
