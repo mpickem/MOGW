@@ -91,6 +91,7 @@ subroutine compute_Giw(mu,Giw,SE)
   deallocate(cmat)
 
 ! parallelization - communication
+#ifdef MPI
   allocate(mpi_cwork(nkp))
   do i=1,2*nw
     do ina=1,ndim
@@ -102,6 +103,7 @@ subroutine compute_Giw(mu,Giw,SE)
     enddo
   enddo
   deallocate(mpi_cwork)
+#endif
 
 ! output - should go into io.f90
   if(myid.eq.master) then
@@ -171,6 +173,7 @@ subroutine compute_Gconv(mu,Gconv)
   enddo !iw
   deallocate(cmat)
 
+#ifdef MPI
 ! parallelization - communication
   allocate(mpi_cwork(nkp))
   do i=1,2*nw
@@ -181,6 +184,7 @@ subroutine compute_Gconv(mu,Gconv)
     enddo
   enddo
   deallocate(mpi_cwork)
+#endif
 
   return
 end subroutine compute_Gconv
@@ -338,6 +342,7 @@ subroutine compute_P(mu,Giw,Gconv,P)
   enddo !ikp
   enddo !ikq
 
+#ifdef MPI
 ! parallelization - communication
   allocate(mpi_cwork(nkp))
   do i=1,nw
@@ -350,6 +355,7 @@ subroutine compute_P(mu,Giw,Gconv,P)
     enddo
   enddo
   deallocate(mpi_cwork)
+#endif
 
   if(myid.eq.master) then
     filen=trim(outfolder)//"/Pv.dat"
@@ -589,6 +595,7 @@ subroutine compute_W(P,V,W)
 
   deallocate(dmat)
 
+#ifdef MPI
 ! parallelization - communication
   allocate(mpi_cwork(nkp))
   do i=1,nw
@@ -601,6 +608,7 @@ subroutine compute_W(P,V,W)
     enddo
   enddo
   deallocate(mpi_cwork)
+#endif
 
   if(myid.eq.master) then
     filen=trim(outfolder)//"/Wv.dat"
@@ -752,6 +760,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
 
   SE = FT + ST
 
+#ifdef MPI
  allocate(mpi_cwork(nkp))
   do i=1,nw
     do ina=1,ndim
@@ -763,7 +772,9 @@ subroutine compute_SE(Giw,W,Vend,SE)
     enddo
   enddo
   deallocate(mpi_cwork)
+#endif
 
+  !this also works if compiled without MPI flag (-DMPI)
   if(myid.eq.master) then
     write(*,*) 'output of Sloc(iw) to file Sw.dat'
     filen=trim(outfolder)//"/Sw.dat"
