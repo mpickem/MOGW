@@ -429,7 +429,7 @@ subroutine compute_V(V,Vend,flagVfile)
 
 ! auxiliaries
   integer :: VL(ndim,ndim), VR(ndim,ndim),iv
-  integer :: i,j,k,l,iq
+  integer :: i,j,k,l,iq,ina,inb
   double precision :: tmp(ndim,nw),tmp2(ndim)
 
 ! initialization
@@ -443,33 +443,67 @@ subroutine compute_V(V,Vend,flagVfile)
 ! real V ... from input files
   if (flagVfile .eqv. .true.) then
     
-    call read_u(u_tmp, filename_umatrix)
-    do l=1,ndim
-    do k=1,ndim
-    do j=1,ndim
-    do i=1,ndim
-      V(VL(i,j),VR(k,l),:,:) = u_tmp(i,j,k,l)
-    enddo
-    enddo
-    enddo
-    enddo
+    ! call read_u(u_tmp, filename_umatrix)
+    ! do l=1,ndim
+    ! do k=1,ndim
+    ! do j=1,ndim
+    ! do i=1,ndim
+    !   V(VL(i,j),VR(k,l),:,:) = u_tmp(i,j,k,l)
+    ! enddo
+    ! enddo
+    ! enddo
+    ! enddo
 
+    ! call create_complex_datatype
+    ! parallelized read into first V frequency
 
-
+    if (myid .eq. master) then
     do iq=1,nkp
       call read_vq(iq, vq, filename_vq)
+      write(*,*) vq
       do l=1,ndim
       do k=1,ndim
       do j=1,ndim
       do i=1,ndim
-        V(VL(i,j),VR(k,l),iq,:) = V(VL(i,j),VR(k,l),iq,:) + vq(i,j,k,l)
+        V(VL(i,j),VR(k,l),iq,1) = V(VL(i,j),VR(k,l),iq,1) + vq(i,j,k,l)
       enddo
       enddo
       enddo
       enddo
     enddo
 
+    allocate(mpi_cwork(nkp))
+    do l=1,ndim
+    do k=1,ndim
+    do j=1,ndim
+    do i=1,ndim
+      mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
+      call &
+      mpi_bcast(mpi_cwork,nkp,mpi_double_complex,master,mpi_comm_world)
+    enddo
+    enddo
+    enddo
+    enddo
+    deallocate(mpi_cwork)
+
+    endif
+
+! #ifdef MPI
+! ! parallelization - communication
+!   allocate(mpi_cwork(nkp))
+!     do ina=1,ndim**2
+!       do inb=1,ndim**2
+!         call MPI_ALLGATHERV(V(ina,inb,ikstart:ikend,1),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
+!         V(ina,inb,:,i)=mpi_cwork(:)
+!       enddo
+!     enddo
+!   deallocate(mpi_cwork)
+! #endif
+
     ! no frequency dependency in the ADGA case
+    do i=2,nw
+      V(:,:,:,i) = V(:,:,:,1)
+    enddo
     Vend(:,:,:) = V(:,:,:,1)
 
 

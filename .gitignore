@@ -2,9 +2,9 @@
 *.o
 # module files from ifort
 *.mod
+# random fortran output files
+fort.*
 # vim files
 ~
 # binary
 gw
-indizes/
-output/

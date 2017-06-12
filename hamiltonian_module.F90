@@ -27,7 +27,7 @@ contains
     double precision :: efermi,dum
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
 
-       open( 77,file='HMLT',form='formatted',status='old',iostat=ios,    &
+       open( 77,file='input/HMLT',form='formatted',status='old',iostat=ios,    &
              action='read',position='rewind' )
        if( ios /= 0 )then
          write(6,*)
@@ -179,7 +179,7 @@ SUBROUTINE read_bzindices
       allocate(imq(nkp),ikpq(nkp,nkp))
 
       ikpq=0
-      open(11,file='HMLT.index.kpq',status='unknown',form='unformatted')
+      open(11,file='input/HMLT.index.kpq',status='unknown',form='unformatted')
       do ikp=1,nkp
          read(11)(ikpq(ikp,jkp),jkp=ikp,nkp)
   do jkp=1,ikp-1
@@ -188,7 +188,7 @@ SUBROUTINE read_bzindices
       enddo
       close(11)
 
-      open(11,file='HMLT.index.mq',status='unknown',form='unformatted')
+      open(11,file='input/HMLT.index.mq',status='unknown',form='unformatted')
       read(11)(imq(ikp),ikp=1,nkp)
       close(11)
 
