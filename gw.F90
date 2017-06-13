@@ -431,12 +431,14 @@ subroutine compute_V(V,Vend,flagVfile)
   integer :: VL(ndim,ndim), VR(ndim,ndim),iv
   integer :: i,j,k,l,iq,ina,inb, error
   double precision :: tmp(ndim,nw),tmp2(ndim)
+  complex(dp) :: sumq
 
 ! initialization
   V=0.d0
   Vend=0.d0
   tmp=0.d0
   tmp2=0.d0
+  sumq=0.d0
 
   call index_(VL,VR)
 
@@ -447,22 +449,10 @@ subroutine compute_V(V,Vend,flagVfile)
 
   call create_complex_datatype
     
-    if (myid .eq. master) then ! for the time being
+    if (myid .eq. master) then
     ! only master reads and broadcasts to everyone
-      call read_u(u_tmp, filename_umatrix)
-      do l=1,ndim
-      do k=1,ndim
-      do j=1,ndim
-      do i=1,ndim
-        V(VL(i,j),VR(k,l),:,1) = u_tmp(i,j,k,l) ! static hubbard term
-      enddo
-      enddo
-      enddo
-      enddo
 
-      ! call create_complex_datatype
-      ! parallelized read into first V frequency
-
+    ! read non-local V(q)
       do iq=1,nkp
         call read_vq(iq, vq, filename_vq)
         do l=1,ndim
@@ -476,7 +466,38 @@ subroutine compute_V(V,Vend,flagVfile)
         enddo
       enddo
 
+      ! check wether V(q) is purely non local
+      do l=1,ndim
+      do k=1,ndim
+      do j=1,ndim
+      do i=1,ndim
+        sumq = 0.d0
+        do iq=1,nkp
+          sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
+        enddo
+        sumq=sumq/nkp ! normalize
+        ! write(*,*) i, j, k, l, sumq
+        ! make it purley non local if thats not the case
+        V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
+      enddo
+      enddo
+      enddo
+      enddo
 
+    ! read local U
+      call read_u(u_tmp, filename_umatrix)
+      do l=1,ndim
+      do k=1,ndim
+      do j=1,ndim
+      do i=1,ndim
+        V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) + u_tmp(i,j,k,l) ! static hubbard term
+      enddo
+      enddo
+      enddo
+      enddo
+
+
+    ! broadcast from master to everyone else
       allocate(mpi_cwork(nkp))
       do l=1,ndim
       do k=1,ndim
@@ -493,6 +514,13 @@ subroutine compute_V(V,Vend,flagVfile)
 
     endif
 
+    ! no frequency dependency in the ADGA case
+    ! everyone for himself
+    do i=2,nw
+      V(:,:,:,i) = V(:,:,:,1)
+    enddo
+    Vend(:,:,:) = V(:,:,:,1)
+
 ! #ifdef MPI
 ! ! parallelization - communication
 !   allocate(mpi_cwork(nkp))
@@ -505,11 +533,6 @@ subroutine compute_V(V,Vend,flagVfile)
 !   deallocate(mpi_cwork)
 ! #endif
 
-    ! no frequency dependency in the ADGA case
-    do i=2,nw
-      V(:,:,:,i) = V(:,:,:,1)
-    enddo
-    Vend(:,:,:) = V(:,:,:,1)
 
 
     ! call input_V(tmp,nw,"input/Uiv-LLLL.dat",3)
