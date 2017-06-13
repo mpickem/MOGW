@@ -26,10 +26,10 @@ subroutine read_vq(iq, vq, filename_vq)
   call h5dopen_f(vq_file_id, ".axes/Q-points", iq_id, err)
   call h5dget_space_f(iq_id, iq_space_id, err)
   call h5sget_simple_extent_dims_f(iq_space_id, iq_dims, iq_maxdims, err)
-  if(iq_dims(2) .ne. nkp) then
-     write(*,*) 'Inconsistent number of q-points in V^q!', iq_dims(2),'/',nkp
-     stop
-  endif
+  ! if(iq_dims(2) .ne. nkp) then
+  !    write(*,*) 'Inconsistent number of q-points in V^q!', iq_dims(2),'/',nkp
+  !    stop
+  ! endif
  
   vq = 0.d0
 
