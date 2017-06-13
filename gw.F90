@@ -905,6 +905,69 @@ subroutine compute_n(ncur,trace,Giw)
   return
 end subroutine compute_n
 
+
+! make it public if finished
+subroutine read_DMFT_SE(SE,filename_dmft)
+  character(len=80), intent(in) :: filename_dmft
+  complex(dp), intent(inout) :: SE(ndim,ndim,nkp,2*nw)
+  integer :: error
+
+  SE = 0.d0
+
+  call h5open_f(error)
+  call create_complex_datatype
+
+! read Matsubara frequencies iw (big range): 
+  call h5dopen_f(file_id, ".axes/iw", iw_id, error)
+  call h5dget_space_f(iw_id, iw_space_id, error)
+  call h5sget_simple_extent_dims_f(iw_space_id, iw_dims, iw_maxdims, error)
+  iwmax = iw_dims(1)/2
+  allocate(iw_data(-iwmax:iwmax-1))
+  call h5dread_f(iw_id, h5t_native_double, iw_data, iw_dims, error)
+  call h5dclose_f(iw_id, error)
+
+! read bosonic and fermionic Matsubara axes iwf-g4,iwb-g4:
+  call read_axes(file_vert_id, iwb_data, iwf_data, iwb_space_id, iwf_space_id, iwb_dims, iwf_dims)
+
+
+  call h5dopen_f(file_id, "stat-001/ineq-001/siw/value", siw_id, error)
+  call h5dget_space_f(siw_id, siw_space_id, error)
+  call h5sget_simple_extent_dims_f(siw_space_id, siw_dims, siw_maxdims, error)
+  ndims = siw_dims(3)
+  allocate(siw_data(2,-iwmax:iwmax-1,siw_dims(2),siw_dims(3))) !indices: real/imag iw spin band
+  call h5dread_f(siw_id, compound_id, siw_data, siw_dims, error)
+  allocate(siw(-iwmax:iwmax-1,siw_dims(3)))
+
+  !paramagnetic:
+  siw = 0.d0
+  siw(:,:) = siw_data(1,:,1,:)+siw_data(1,:,2,:)+ci*siw_data(2,:,1,:)+ci*siw_data(2,:,2,:)
+  siw = siw/2.d0
+
+  call h5dclose_f(siw_id, error)
+
+
+  deallocate(siw_data)
+
+    ! enforce orbital symmetry
+
+    do iband=2,ndims
+       siw(:,1) = siw(:,1)+siw(:,iband)
+    enddo
+
+    do iband=1,ndims
+       siw(:,iband) = siw(:,1)
+    enddo
+    siw = siw/dble(ndims)
+
+
+    ! test siw:
+    open(34, file=trim(output_dir)//"siw.dat", status='unknown')
+    do iw=-iwmax,iwmax-1   
+       write(34,'(100F12.6)')iw_data(iw), (real(siw(iw,i)),aimag(siw(iw,i)), i=1,ndims)
+    enddo
+    close(34)
+end subroutine read_DMFT_SE
+
 end module computation_functions
 
 
@@ -964,10 +1027,10 @@ program gw
       read(10,*)
       read(10,*) outfolder
       read(10,*)
-      if (flagVfile .eqv. .true.) then
-        read(10,*) filename_umatrix
-        read(10,*) filename_vq
-      endif
+      read(10,*) filename_umatrix
+      read(10,*) filename_vq
+      read(10,*)
+      read(10,*) filename_dmft
     close(unit=10)
 
   call system("mkdir -p "//trim(outfolder))
