@@ -907,15 +907,47 @@ end subroutine compute_n
 
 
 ! make it public if finished
-subroutine read_DMFT_SE(SE,filename_dmft)
+subroutine read_DMFT_SE(SE,mu,filename_dmft)
   character(len=80), intent(in) :: filename_dmft
   complex(dp), intent(inout) :: SE(ndim,ndim,nkp,2*nw)
-  integer :: error
+  double precision,intent(inout) :: mu
+
+  double precision :: beta_dmft
+  integer :: error, iwmax, ndims, iband, iw, i
+  integer(hid_t) :: file_id, iw_id, siw_id, iw_space_id, iwb_space_id
+  integer(hid_t) :: iwf_space_id, siw_space_id, mu_id, config_id, beta_id
+  integer(hsize_t), dimension(0) :: mu_dims, beta_dims
+  integer(hsize_t), dimension(1) :: iw_dims, iw_maxdims, iwb_dims, iwf_dims
+  integer(hsize_t), dimension(3) :: siw_dims, siw_maxdims
+  double precision, allocatable :: iw_data(:), iwb_data(:), iwf_data(:)
+  double precision, allocatable :: siw_data(:,:,:,:)
+  complex(dp), allocatable :: siw(:,:)
+
 
   SE = 0.d0
 
+  ! necessary
   call h5open_f(error)
   call create_complex_datatype
+
+  ! get file id
+  call h5fopen_f(filename_dmft, h5f_acc_rdonly_f, file_id, error)
+
+! read inverse temperature beta:
+  call h5gopen_f(file_id, ".config", config_id, error)
+  call h5aopen_f(config_id, "general.beta", beta_id, error)
+  call h5aread_f(beta_id, h5t_native_double, beta_dmft, beta_dims, error)
+  call h5aclose_f(beta_id, error)
+  call h5gclose_f(config_id,error)
+ 
+  if(myid.eq.master) write(*,*) 'beta GW: ', beta
+  if(myid.eq.master) write(*,*) 'beta DMFT: ', beta_dmft
+
+
+! read chemical potential:
+  call h5dopen_f(file_id, "dmft-last/mu/value", mu_id, error)
+  call h5dread_f(mu_id, h5t_native_double, mu, mu_dims, error)
+  call h5dclose_f(mu_id, error)
 
 ! read Matsubara frequencies iw (big range): 
   call h5dopen_f(file_id, ".axes/iw", iw_id, error)
@@ -926,14 +958,11 @@ subroutine read_DMFT_SE(SE,filename_dmft)
   call h5dread_f(iw_id, h5t_native_double, iw_data, iw_dims, error)
   call h5dclose_f(iw_id, error)
 
-! read bosonic and fermionic Matsubara axes iwf-g4,iwb-g4:
-  call read_axes(file_vert_id, iwb_data, iwf_data, iwb_space_id, iwf_space_id, iwb_dims, iwf_dims)
-
-
-  call h5dopen_f(file_id, "stat-001/ineq-001/siw/value", siw_id, error)
+  call h5dopen_f(file_id, "dmft-last/ineq-001/siw/value", siw_id, error)
   call h5dget_space_f(siw_id, siw_space_id, error)
   call h5sget_simple_extent_dims_f(siw_space_id, siw_dims, siw_maxdims, error)
   ndims = siw_dims(3)
+
   allocate(siw_data(2,-iwmax:iwmax-1,siw_dims(2),siw_dims(3))) !indices: real/imag iw spin band
   call h5dread_f(siw_id, compound_id, siw_data, siw_dims, error)
   allocate(siw(-iwmax:iwmax-1,siw_dims(3)))
@@ -961,11 +990,21 @@ subroutine read_DMFT_SE(SE,filename_dmft)
 
 
     ! test siw:
-    open(34, file=trim(output_dir)//"siw.dat", status='unknown')
+    open(34, file=trim(outfolder)//"/siw.dat", status='unknown')
     do iw=-iwmax,iwmax-1   
        write(34,'(100F12.6)')iw_data(iw), (real(siw(iw,i)),aimag(siw(iw,i)), i=1,ndims)
     enddo
     close(34)
+
+
+    ! rewrite in for here usable format
+    ! DMFT ... therefore without q dependency
+    do i=1,ndim
+    do iw=1,2*nw
+      SE(i,i,:,iw)=siw(iw,i)
+    enddo
+    enddo
+
 end subroutine read_DMFT_SE
 
 end module computation_functions
@@ -1097,7 +1136,11 @@ if (flagN .eqv. .true.) mu=0.d0 !symmetric bisection start around 0
 
 
 ! setting up variables for first runthrough
-  SE_new = 0.d0   ! for first runthrough -> G0(ik)
+  ! for first runthrough -> GDMFT(ik)
+  call read_DMFT_SE(SE_new,mu,filename_dmft)
+  if(myid.eq.master) write(*,*) 'mu: ', mu
+  ! for first runthrough -> G0(ik)
+  SE_new = 0.d0
   cyc=0     ! counting cycles
 
 !######################################

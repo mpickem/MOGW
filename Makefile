@@ -11,8 +11,8 @@ LIBS = -L$(LIBRARY_PATH) -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
 #-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread 
 #-lmkl_lapack -lguide
 
-PROG = gw_dmft
-OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o gw.o io.o
+PROG = gw
+OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o $(PROG).o io.o
 # parameters_module.o 
 
 all : $(PROG) $(OBJS)

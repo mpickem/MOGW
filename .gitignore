@@ -8,3 +8,5 @@ fort.*
 ~
 # binary
 gw
+# large hdf5 files
+*.hdf5
