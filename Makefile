@@ -12,7 +12,8 @@ LIBS = -L$(LIBRARY_PATH) -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
 #-lmkl_lapack -lguide
 
 PROG = gw
-OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o $(PROG).o io.o
+OBJS = aux.o lapack_module.o hamiltonian_module.o index_reference.o four.o mpi_org.o hdf5_module.o vq_module.o \
+			 computation_functions.o read_functions.o $(PROG).o io.o
 # parameters_module.o 
 
 all : $(PROG) $(OBJS)
@@ -20,7 +21,7 @@ all : $(PROG) $(OBJS)
 $(PROG) : $(OBJS)
 	$(FORTRAN) -o $(PROG) $(FFLAGS) $(OBJ) $(LDFLAGS) $(LIBS) $^
 
-%.o : %.F90
+%.o : %.f90
 	$(FORTRAN) -c $(FFLAGS) $< 
 
 clean :
