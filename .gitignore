@@ -1,3 +1,9 @@
+# random files
+*.log
+*.btr
+*.out
+*.dat
+*.png
 # object files from ifort
 *.o
 # module files from ifort
@@ -5,7 +11,8 @@
 # random fortran output files
 fort.*
 # vim files
-~
+*~
+~*
 # binary
 gw
 # large hdf5 files
