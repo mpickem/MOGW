@@ -32,6 +32,8 @@ subroutine read_V(V,Vend,flagVfile)
   tmp2=0.d0
   sumq=0.d0
 
+  if (myid .eq. master) write(*,*) 'Reading V'
+
   call index_(VL,VR)
 
 ! real V ... from input files
@@ -88,23 +90,23 @@ subroutine read_V(V,Vend,flagVfile)
       enddo
       enddo
 
-
-    ! broadcast from master to everyone else
-      allocate(mpi_cwork(nkp))
-      do l=1,ndim
-      do k=1,ndim
-      do j=1,ndim
-      do i=1,ndim
-        mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
-        call &
-        mpi_bcast(mpi_cwork,nkp,mpi_double_complex,master,mpi_comm_world)
-      enddo
-      enddo
-      enddo
-      enddo
-      deallocate(mpi_cwork)
-
     endif
+
+  ! broadcast from master to everyone else
+    allocate(mpi_cwork(nkp))
+    do l=1,ndim
+    do k=1,ndim
+    do j=1,ndim
+    do i=1,ndim
+      mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
+      call &
+      mpi_bcast(mpi_cwork,nkp,mpi_double_complex,master,mpi_comm_world)
+    enddo
+    enddo
+    enddo
+    enddo
+    deallocate(mpi_cwork)
+
 
     ! no frequency dependency in the ADGA case
     ! everyone for himself
