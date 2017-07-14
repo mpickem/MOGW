@@ -1,0 +1,29 @@
+# Makefile for HCLM
+
+FORTRAN = mpif90
+
+FFLAGS = -O3 -g -fpp -DMPI  # ifort production
+
+LDFLAGS += -I/opt/hdf5-1.8.16_gcc/include/
+LDFLAGS += -L/opt/hdf5-1.8.16_gcc/lib/
+
+FINCLUDE += -I/opt/hdf5-1.8.16_gcc/include/
+
+LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran #-lmkl_rt  #-limf
+LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran -llapack -lblas -limf
+LDINCLUDE += -L/opt/hdf5-1.8.16_gcc/lib/
+
+
+PROG = gw
+OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o $(PROG).o io.o
+
+all : $(PROG) $(OBJS)
+
+$(PROG) : $(OBJS)
+	$(FORTRAN) -o $(PROG) $(FFLAGS) $(OBJ) $(LDFLAGS) $(LIBS) $^
+
+%.o : %.F90
+	$(FORTRAN) -c $(FFLAGS) $< 
+
+clean :
+	rm -f $(PROG) *.mod *.o
