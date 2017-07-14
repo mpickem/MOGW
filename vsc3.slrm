@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -N 3
-#SBATCH -J GW_MO
+#SBATCH -N 6
+#SBATCH -J mogw_srvo3_b10
 #SBATCH --ntasks-per-node=16
 #SBATCH --partition=mem_0064
 #SBATCH --qos=normal_0064
@@ -13,4 +13,4 @@ export I_MPI_PMI_LIBRARY=/cm/shared/apps/slurm/current/lib/libpmi.so
 
 #trap '' USR1 USR2
 #LD_PRELOAD= ~/opt/lib/libnfft3.so
-srun ./gw_MO > gwmo-$SLURM_JOB_ID.log 2>&1
+srun ./gw > gwmo-$SLURM_JOB_ID.log 2>&1

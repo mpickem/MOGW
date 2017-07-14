@@ -1,18 +1,18 @@
 # Parameter file for gw_MO
 #----------------------------------------------------------------------
-5   # nw .. number of Matsubara frequencies
+100   # nw .. number of Matsubara frequencies
 64    # L .. number of time dicretization point in [0,beta)
 10    # beta .. inverse Temperature
 0     # mu .. chemical potential
 1     # ntot .. total number of particles
 #----------------------------------------------------------------------
-F     # flagN .. T = adapt mu in order to get ntot particles
+T     # flagN .. T = adapt mu in order to get ntot particles
 F     # flagSE .. T = activate SE self-consistent cycle
 T     # flagVfile .. T = read V array data from files
 #----------------------------------------------------------------------
-"output-test"
+"output"
 #----------------------------------------------------------------------
 "input/umatrix.dat"
-"input/Vq.hdf5"
+"input/V_q_40-40-40_20-20-20.hdf5"
 #----------------------------------------------------------------------
 "input/svo1-highstat-run02-left2right-2017-05-28-Sun-19-41-10.hdf5"

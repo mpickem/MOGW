@@ -3,6 +3,7 @@
 *.btr
 *.out
 *.dat
+*.data
 *.png
 # object files from ifort
 *.o
@@ -17,3 +18,6 @@ fort.*
 gw
 # large hdf5 files
 *.hdf5
+# data files
+HMLT*
+*.hk
