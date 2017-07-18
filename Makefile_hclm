@@ -2,7 +2,7 @@
 
 FORTRAN = mpif90
 
-FFLAGS = -O3 -g -fpp -DMPI  # ifort production
+FFLAGS = -O3 -g -cpp -DMPI -ffree-line-length-512 # ifort production
 
 LDFLAGS += -I/opt/hdf5-1.8.16_gcc/include/
 LDFLAGS += -L/opt/hdf5-1.8.16_gcc/lib/
@@ -13,17 +13,19 @@ LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran #-lmkl_rt  #-limf
 LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran -llapack -lblas -limf
 LDINCLUDE += -L/opt/hdf5-1.8.16_gcc/lib/
 
+LIBS =  -L$(MKLROOT)/lib/intel64 -lmkl_rt
+
 
 PROG = gw
-OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o $(PROG).o io.o
+OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o index_reference.o computation_functions.o read_functions.o $(PROG).o io.o
 
 all : $(PROG) $(OBJS)
 
 $(PROG) : $(OBJS)
 	$(FORTRAN) -o $(PROG) $(FFLAGS) $(OBJ) $(LDFLAGS) $(LIBS) $^
 
-%.o : %.F90
-	$(FORTRAN) -c $(FFLAGS) $< 
+%.o : %.f90
+	$(FORTRAN) -c $(FFLAGS) $(LDFLAGS) $(LDINCLUDE) $< 
 
 clean :
 	rm -f $(PROG) *.mod *.o

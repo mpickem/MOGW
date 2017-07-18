@@ -258,7 +258,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
 
 
 ! read chemical potential:
-  call h5dopen_f(file_id, "dmft-last/mu/value", mu_id, error)
+  call h5dopen_f(file_id, "stat-001/mu/value", mu_id, error)
   call h5dread_f(mu_id, h5t_native_double, mu, mu_dims, error)
   call h5dclose_f(mu_id, error)
 
@@ -271,7 +271,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
   call h5dread_f(iw_id, h5t_native_double, iw_data, iw_dims, error)
   call h5dclose_f(iw_id, error)
 
-  call h5dopen_f(file_id, "dmft-last/ineq-001/siw/value", siw_id, error)
+  call h5dopen_f(file_id, "stat-001/ineq-001/siw/value", siw_id, error)
   call h5dget_space_f(siw_id, siw_space_id, error)
   call h5sget_simple_extent_dims_f(siw_space_id, siw_dims, siw_maxdims, error)
   ndims = siw_dims(3)
