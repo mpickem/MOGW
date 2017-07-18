@@ -78,6 +78,8 @@ subroutine read_V(V,Vend,flagVfile)
       enddo
       enddo
 
+      write(*,*) 'sum over V(q) / nkp = ', sumq
+
     ! read local U
       call read_u(u_tmp, filename_umatrix)
       do l=1,ndim

@@ -1,6 +1,14 @@
 multi orbital GW program
 
 parameter file is located at ./input/parameters.in
-possible umatrix.dat vq.hdf5 files are also located in ./input/
+possible umatrix.dat vq.hdf5 files are located in ./input/
 
 output folder is created on its own
+
+in order to compile the code one must load the appropriate vsc modules and execute the Makefile
+'. vsc3modules && make'
+
+required hamlitonian Files:
+./input/HMLT
+./input/HMLT.index.kpq
+./input/HMLT.index.mq

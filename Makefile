@@ -13,7 +13,7 @@ LIBS = -L$(LIBRARY_PATH) -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
 
 PROG = gw
 OBJS = aux.o lapack_module.o hamiltonian_module.o index_reference.o four.o mpi_org.o hdf5_module.o vq_module.o \
-			 computation_functions.o read_functions.o $(PROG).o io.o
+			 computation_functions.o read_functions.o gw.o io.o
 # parameters_module.o 
 
 all : $(PROG) $(OBJS)

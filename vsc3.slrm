@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=16
 #SBATCH --partition=mem_0064
 #SBATCH --qos=normal_0064
-#SBATCH --time=72:00:00
+#SBATCH --time=03:00:00
 
 . vsc3modules
 

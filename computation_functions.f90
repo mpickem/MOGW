@@ -592,16 +592,12 @@ subroutine compute_SE(Giw,W,Vend,SE)
     call local_output_Matsub_diagonal(SE,1,filen) ! this routine is in io.f90
     filen=trim(outfolder)//"/Skw.dat"
     open(unit=10,file=filen)
-      write(10,*) "## ikp, iw, iomega, RE[S_ii(ikp,iw)], IM(S_ii(ikp,iw)]"
+      write(10,*) "## ikp, kx, ky, kz, iw, iomega, RE[S_ij(ikp,iw)], IM(S_ij(ikp,iw)]"
       write(10,*) "##"
       do ikp=1,nkp
       do iw=1,min(250,nw)
-        write(10,'(I7,I7,F20.8)',advance='no') ikp,iw,pi/beta*real(2*(iw-1)+1,kind=8)
-        do i=1,ndim
-          write(10,'(E23.8)',advance='no') real(SE(i,i,ikp,iw))
-          write(10,'(E23.8)',advance='no') aimag(SE(i,i,ikp,iw))
-        enddo
-        write(10,*) ! line break
+        write(10,'(I7,3F20.8,I7,F20.8)',advance='no') ikp, bk(1,ikp), bk(2,ikp), bk(3,ikp) ,iw,pi/beta*real(2*(iw-1)+1,kind=8)
+        write(10,'(20E23.8)',advance='no') ((real(SE(i,j,ikp,iw)), aimag(SE(i,j,ikp,iw)), j=1,ndim),i=1,ndim)
       enddo
       enddo
     close(10)
