@@ -23,7 +23,7 @@ SUBROUTINE local_output_Matsub(G,ifermi,ch)
   enddo
   GL=GL/2.d0 !SPIN                                                                                                                                                                    
   open(unit=10,file=trim(ch),status='unknown')
-  write(10,*) 'i, iomega, RE / IM [Variable(i,j)] in order: 11, 21, ... , 12, 22, ...'
+  write(10,*) 'i, iomega, RE / IM [Variable(i,j)] in order: 11, 12, ... , 21, 22, ...'
   if (ifermi.eq.1) then
      do i=1,min(250,nw)
         write(10,'(I7,F20.8,1000E23.8)') i,real(2*(i-1)+1,kind=8)*pi/beta,((GL(ina,inb,i),inb=1,ndim),ina=1,ndim)
@@ -83,7 +83,7 @@ SUBROUTINE local_output_Compound(G,ifermi,ch)
   enddo
   GL=GL/2.d0 !SPIN                                                                                                                                                                    
   open(unit=10,file=trim(ch),status='unknown')
-  write(10,*) 'i, iomega, RE / IM [Variable(i,j)] in order: 11, 21, ... , 12, 22, ...'
+  write(10,*) 'i, iomega, RE / IM [Variable(i,j)] in order: 11, 12, ... , 21, 22, ...'
   if (ifermi.eq.1) then
      do i=1,nw
         write(10,'(I7,F20.8,1000E23.8)') i, real(2*(i-1)+1,kind=8)*pi/beta, &

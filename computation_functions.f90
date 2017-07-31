@@ -597,7 +597,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
       do ikp=1,nkp
       do iw=1,min(250,nw)
         write(10,'(I7,3F20.8,I7,F20.8)',advance='no') ikp, bk(1,ikp), bk(2,ikp), bk(3,ikp) ,iw,pi/beta*real(2*(iw-1)+1,kind=8)
-        write(10,'(20E23.8)',advance='no') ((real(SE(i,j,ikp,iw)), aimag(SE(i,j,ikp,iw)), j=1,ndim),i=1,ndim)
+        write(10,'(20E23.8)',advance='yes') ((real(SE(i,j,ikp,iw)), aimag(SE(i,j,ikp,iw)), j=1,ndim),i=1,ndim)
       enddo
       enddo
     close(10)
