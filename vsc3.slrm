@@ -6,7 +6,7 @@
 #SBATCH --qos=normal_0064
 #SBATCH --time=72:00:00
 
-# . vsc3modules
+. vsc3modules
 
 # Required by srun; see https://wiki.vsc.ac.at/doku.php?id=doku:slurm
 export I_MPI_PMI_LIBRARY=/cm/shared/apps/slurm/current/lib/libpmi.so

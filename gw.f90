@@ -202,24 +202,24 @@ program gw
   ! Difference between old and new Self-Energy - self consistency
     tmp=0.d0
     if(flagSE .eqv. .true.) then
-       maxdif=0.d0
-       do iw=1,nw
-       do ikp=1,nkp
-       do i=1,ndim
-       do j=1,ndim
-         dif=SE_old(i,j,ikp,iw) - SE_new(i,j,ikp,iw)
-         if( (real(dif)**2.d0 + aimag(dif)**2.d0) .gt. (real(maxdif)**2.d0 + aimag(maxdif)**2.d0) ) maxdif=dif
-       enddo
-       enddo
-       enddo
-       enddo
+      maxdif=0.d0
+      do iw=1,nw
+      do ikp=1,nkp
+      do i=1,ndim
+      do j=1,ndim
+        dif=SE_old(i,j,ikp,iw) - SE_new(i,j,ikp,iw)
+        if( (real(dif)**2.d0 + aimag(dif)**2.d0) .gt. (real(maxdif)**2.d0 + aimag(maxdif)**2.d0) ) maxdif=dif
+      enddo
+      enddo
+      enddo
+      enddo
      
-       tmp = real(maxdif)**2.d0 + aimag(maxdif)**2.d0
-       if(myid.eq.master) then
-         write(*,*) '# ----------------------------------------------------------------------'
-         write(*,*) "# max difference between this and previous cycle:", tmp
-         write(*,*) '# ----------------------------------------------------------------------'
-       endif
+      tmp = real(maxdif)**2.d0 + aimag(maxdif)**2.d0
+      if(myid.eq.master) then
+        write(*,*) '# ----------------------------------------------------------------------'
+        write(*,*) "# max difference between this and previous cycle:", tmp
+        write(*,*) '# ----------------------------------------------------------------------'
+      endif
     endif
 
     ! for one shot calculations with updated G
@@ -239,7 +239,7 @@ program gw
   if(myid.eq.master) then
     write(*,*) '# number of cycles:', cyc
     tend=mpi_wtime()
-    write(*,*) 'Time needed: ',tend-tstart
+    write(*,*) 'Time needed [s]: ',tend-tstart
     write(*,*) 'Closing mpi environment'
   endif
 

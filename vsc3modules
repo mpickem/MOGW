@@ -3,3 +3,5 @@ module load intel/17.0.4
 module load intel-mpi/2017.3
 module load intel-mkl/2017.3
 module load hdf5/1.8.18
+module load gcc/5.3
+module load gnuplot/5.0.5

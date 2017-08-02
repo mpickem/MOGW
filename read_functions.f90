@@ -95,19 +95,19 @@ subroutine read_V(V,Vend,flagVfile)
     endif
 
   ! broadcast from master to everyone else
-    allocate(mpi_cwork(nkp))
+    ! allocate(mpi_cwork(nkp))
     do l=1,ndim
     do k=1,ndim
     do j=1,ndim
     do i=1,ndim
-      mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
+      ! mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
       call &
-      mpi_bcast(mpi_cwork,nkp,mpi_double_complex,master,mpi_comm_world)
+      mpi_bcast(V(VL(i,j),VR(k,l),:,1),nkp,mpi_double_complex,master,mpi_comm_world)
     enddo
     enddo
     enddo
     enddo
-    deallocate(mpi_cwork)
+    ! deallocate(mpi_cwork)
 
 
     ! no frequency dependency in the ADGA case
