@@ -30,9 +30,20 @@ program gw
   real(dp) :: mu_min,mu_max,mu_mid,tmp,dummy
   real(dp) :: tstart, tend  ! mpi times
   integer :: i,j,ikp,iw,cyc
+  character(len=100) :: cmd_arg
+
+
+  ! read command line argument -> file name of config file
+  if (iargc() .ne. 1) then
+    write(*,*) 'The program has to be executed with exactly one argument. (Name of config file)'
+    stop
+  end if
+
+  call getarg(1,cmd_arg)
+  write(*,*) 'Reading config: ', trim(cmd_arg)
 
 ! parameters
-  open(unit=10,file="input/parameters.in", &
+  open(unit=10,file=trim(cmd_arg), &
     status='old', action='read', position='rewind')
       read(10,*)
       read(10,*)

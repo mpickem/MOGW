@@ -10,7 +10,7 @@ F     # flagN .. T = adapt mu in order to get ntot particles
 F     # flagSE .. T = activate SE self-consistent cycle
 T     # flagVfile .. T = read V array data from files
 #----------------------------------------------------------------------
-"output-nw60-dmft-bugfix"
+"output-nw60-Gdmft"
 #----------------------------------------------------------------------
 "input/umatrix.dat"
 "input/V_q_40-40-40_20-20-20.hdf5"

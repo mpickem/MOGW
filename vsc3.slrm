@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -N 2
+#SBATCH -N 3
 #SBATCH -J mogw_srvo3_b10
 #SBATCH --ntasks-per-node=16
 #SBATCH --partition=mem_0064

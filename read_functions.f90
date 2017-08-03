@@ -314,7 +314,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
     ! DMFT ... therefore without q dependency
     do i=1,ndim
     do iw=1,2*nw
-      SE(i,i,:,iw)=siw(iw,i)
+      SE(i,i,:,iw)=siw(iw-1,i)
     enddo
     enddo
 
