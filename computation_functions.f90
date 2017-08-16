@@ -11,7 +11,7 @@ module computation_functions
 
 contains
 
-subroutine compute_Giw(mu,Giw,SE) 
+subroutine compute_Giw(mu,Giw,SE)
 ! input/output
   real(dp), intent(in) :: mu
   complex(kind=8), intent(out) :: Giw(ndim,ndim,nkp,2*nw)
@@ -49,8 +49,8 @@ subroutine compute_Giw(mu,Giw,SE)
 #ifdef MPI
   allocate(mpi_cwork(nkp))
   do i=1,2*nw
-    do ina=1,ndim
-      do inb=1,ndim
+    do inb=1,ndim
+      do ina=1,ndim
         call MPI_ALLGATHERV(Giw(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
         ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
         Giw(ina,inb,:,i)=mpi_cwork(:)
@@ -68,7 +68,7 @@ subroutine compute_Giw(mu,Giw,SE)
     call local_output_Matsub_diagonal(Giw,1,filen) ! this routine is in io.f90
 
 ! output - should go into io.f90
-    
+
     filen=trim(outfolder)//"/Gkw.dat"
     open(unit=10,file=filen)
       write(10,*) "## ikp, iw, iomega, RE[G_ii(ikp,iw)], IM(G_ii(ikp,iw)]"
@@ -107,7 +107,7 @@ end subroutine compute_Giw
 subroutine compute_Gconv(mu,Gconv)
 ! input/output
   real(dp), intent(in) :: mu
-  complex(kind=8), intent(out) :: Gconv(ndim,nkp,2*nw) 
+  complex(kind=8), intent(out) :: Gconv(ndim,nkp,2*nw)
 
 ! auxiliaries
   integer :: ikp,iw,i,ina
@@ -123,7 +123,7 @@ subroutine compute_Gconv(mu,Gconv)
            cmat(i) = ci * real(2*(iw-1)+1,kind=8)*pi/beta + mu - real(h(i,i,ikp))
         enddo
       cmat = 1.d0 / cmat
-      Gconv(:,ikp,iw) = cmat
+      Gconv(:,ikp,iw) = cmat(:)
     enddo ! ikp
   enddo !iw
   deallocate(cmat)
@@ -182,8 +182,8 @@ subroutine compute_P(mu,Giw,Gconv,P)
     G1=Giw(i,j,ikp,iw)
     G2=Giw(k,l,ikpq(ikp,ikq),iw+iv-1)
     ctmp=G1*G2
-    ctmp = ctmp + conjg(Giw(j,i,ikp,iw)) * Giw(k,l,ikpq(ikp,ikq),iv-iw)   
-    P(IL(i,l),IR(k,j),ikq,iv) = P(IL(i,l),IR(k,j),ikq,iv) + ctmp * wtkp(ikp) 
+    ctmp = ctmp + conjg(Giw(j,i,ikp,iw)) * Giw(k,l,ikpq(ikp,ikq),iv-iw)
+    P(IL(i,l),IR(k,j),ikq,iv) = P(IL(i,l),IR(k,j),ikq,iv) + ctmp * wtkp(ikp)
   enddo
   enddo
   enddo
@@ -202,7 +202,6 @@ subroutine compute_P(mu,Giw,Gconv,P)
   do l=1,ndim
   do i=1,ndim
     G1=Giw(i,j,ikp,iw)
-    G1=Giw(i,j,ikp,iw)
     G2=Giw(k,l,ikpq(ikp,ikq),iw+iv-1)
     ctmp=G1*G2
     ctmp = ctmp + conjg(Giw(j,i,ikp,iw)) * conjg(Giw(l,k,ikpq(ikp,ikq),iw-iv+1))
@@ -220,7 +219,7 @@ subroutine compute_P(mu,Giw,Gconv,P)
 !#####################################
 !for convergence reasons:
 !P_ijji(ikq,iv) = P_nqqnn - 2/beta * Gtilde_ii(ikp,iw) * Gtilde_jj(ikp+ikq,iw+iv)
-!##################################### 
+!#####################################
 
 
   do iv=1,nw
@@ -273,6 +272,7 @@ subroutine compute_P(mu,Giw,Gconv,P)
     if( abs(real(h(i,i,ikpq(ikp,ikq))-h(j,j,ikp))) .lt. 1.d-8) then
     P(IL(i,j),IR(j,i),ikq,1) = P(IL(i,j),IR(j,i),ikq,1) - beta*exp(beta*(real(h(j,j,ikp))-mu)) * wtkp(ikp) &
               / (exp(beta*(real(h(j,j,ikp))-mu))+1.d0)**2.d0
+    write(*,*) 'P special case needed'
     else    ! same formula as below with iv=1
     P(IL(i,j),IR(j,i),ikq,1) = P(IL(i,j),IR(j,i),ikq,1) + ((1.d0/(exp((real(h(i,i,ikpq(ikp,ikq)))-mu)*beta)+1.d0)) &
         - (1.d0/(exp((real(h(j,j,ikp))-mu)*beta)+1.d0))) &
@@ -291,11 +291,11 @@ subroutine compute_P(mu,Giw,Gconv,P)
     P(IL(i,j),IR(j,i),ikq,iv) = P(IL(i,j),IR(j,i),ikq,iv) + ((1.d0/(exp((real(h(i,i,ikpq(ikp,ikq)))-mu)*beta)+1.d0)) &
         - (1.d0/(exp((real(h(j,j,ikp))-mu)*beta)+1.d0))) &
         * (1.d0/(real(h(i,i,ikpq(ikp,ikq))-h(j,j,ikp))-ci*2.d0*(iv-1)*pi/beta)) * wtkp(ikp)
-  enddo !iv
-  enddo !j
-  enddo !i
-  enddo !ikp
-  enddo !ikq
+  enddo
+  enddo
+  enddo
+  enddo
+  enddo
 
 #ifdef MPI
 ! parallelization - communication
@@ -341,7 +341,7 @@ subroutine Giw2Gtau(L,Giw,Gtau)
   do ikp=1,nkp ! loop over k-points
     do ina=1,ndim
       ! diagonal elements of G:
-      call invfourierhp(beta,L,nw,Giw(ina,ina,ikp,:),Gtau(ina,ina,ikp,:),0.d0) ! high precision version... 
+      call invfourierhp(beta,L,nw,Giw(ina,ina,ikp,:),Gtau(ina,ina,ikp,:),0.d0) ! high precision version...
       ! the FT routines are in four.f90
       do inb=ina+1,ndim
          ! off-diagonal elements of G:
@@ -351,7 +351,7 @@ subroutine Giw2Gtau(L,Giw,Gtau)
          ! Giw(ina,inb)=Giw^*(inb,ina)  --> Gtau(ina,inb,tau)=Gtau(inb,ina, -tau ) = -Gtau(inb,ina,beta-tau) ... I think ... to be checked:
          !Gtau(inb,ina,ikp,1) = Gtau(ina,inb,ikp,1) ! because there is not jump in offdiag G...
          !do iL=2,L
-         !   Gtau(inb,ina,ikp,iL)= - Gtau(ina,inb,ikp,L+2-iL) 
+         !   Gtau(inb,ina,ikp,iL)= - Gtau(ina,inb,ikp,L+2-iL)
          !enddo
        enddo
     enddo
@@ -390,7 +390,7 @@ subroutine compute_W(P,V,W)
 
 
   do iv=1,nw
-  do ikq=ikstart,ikend ! 1,nkp 
+  do ikq=ikstart,ikend ! 1,nkp
     dmat=0.d0
       do i=1,ndim**2 ! orbitals
          dmat(i,i) = 1.d0 ! 1 - UP
@@ -408,8 +408,8 @@ subroutine compute_W(P,V,W)
 ! parallelization - communication
   allocate(mpi_cwork(nkp))
   do i=1,nw
-    do ina=1,ndim**2
-      do inb=1,ndim**2
+    do inb=1,ndim**2
+      do ina=1,ndim**2
         call MPI_ALLGATHERV(W(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
         ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
         W(ina,inb,:,i)=mpi_cwork(:)
@@ -454,7 +454,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
 
 ! this is only done once - doesnt matter which order these loops are.
   do ikq=1,nkp
-  do i=1,ndim**2 
+  do i=1,ndim**2
   do j=1,ndim**2
     tmpVend(inverse_l(i),inverse_r(i),inverse_r(j),inverse_l(j),ikq) = Vend(i,j,imq(ikq))
     do iv=1,nw
@@ -473,7 +473,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
   do ikq=1,nkp
   do ikp=ikstart,ikend
   do k=1,ndim
-  do l=1,ndim 
+  do l=1,ndim
   do i=1,ndim
   do j=1,ndim
       FT(k,l,ikp,iw) = FT(k,l,ikp,iw) + (tmpW(k,i,j,l,ikq,1)-tmpVend(k,i,j,l,ikq)) * wtkp(ikq) &
@@ -491,7 +491,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
   do ikq=1,nkp
   do ikp=ikstart,ikend
   do k=1,ndim
-  do l=1,ndim 
+  do l=1,ndim
   do i=1,ndim
   do j=1,ndim
         FT(k,l,ikp,iw) = FT(k,l,ikp,iw) + (tmpW(k,i,j,l,ikq,iv)-tmpVend(k,i,j,l,ikq)) * wtkp(ikq) &
@@ -510,7 +510,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
   do ikq=1,nkp
   do ikp=ikstart,ikend
   do k=1,ndim
-  do l=1,ndim 
+  do l=1,ndim
   do i=1,ndim
   do j=1,ndim
         FT(k,l,ikp,iw) = FT(k,l,ikp,iw) + (tmpW(k,i,j,l,ikq,iv)-tmpVend(k,i,j,l,ikq)) * wtkp(ikq) &
@@ -537,7 +537,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
   do k=1,ndim
   do i=1,ndim
   do j=1,ndim
-    ST(k,l,ikp,1) = ST(k,l,ikp,1) + tmpVend(k,i,j,l,ikq) & 
+    ST(k,l,ikp,1) = ST(k,l,ikp,1) + tmpVend(k,i,j,l,ikq) &
         * (Giw(i,j,ikpq(ikp,ikq),iw) + conjg(Giw(j,i,ikpq(ikp,ikq),iw))) * wtkp(ikq)
   enddo
   enddo
@@ -556,7 +556,7 @@ subroutine compute_SE(Giw,W,Vend,SE)
   do iw=1,2*nw
   do ikq=1,nkp
   do ikp=ikstart,ikend
-  do l=1,ndim 
+  do l=1,ndim
   do i=1,ndim
   do k=1,ndim
       ST(k,l,ikp,iw) = ST(k,l,ikp,iw) + tmpVend(k,i,i,l,ikq) * wtkp(ikq) / 4.d0
@@ -572,8 +572,8 @@ subroutine compute_SE(Giw,W,Vend,SE)
 #ifdef MPI
  allocate(mpi_cwork(nkp))
   do i=1,nw
-    do ina=1,ndim
-      do inb=1,ndim
+    do inb=1,ndim
+      do ina=1,ndim
         call MPI_ALLGATHERV(SE(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
         ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
         SE(ina,inb,:,i)=mpi_cwork(:)
@@ -627,7 +627,7 @@ subroutine compute_n(ncur,trace,Giw)
     do j=1,ndim
       ncur(i,j) = ncur(i,j) + (Giw(i,j,ikp,iw) + conjg(Giw(j,i,ikp,iw))) * wtkp(ikp)
     enddo
-    enddo   
+    enddo
   enddo
   enddo
 

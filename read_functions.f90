@@ -8,7 +8,7 @@ module read_functions
 
   implicit none
   private
-  public :: read_V, read_DMFT_SE 
+  public :: read_V, read_DMFT_SE
 
   contains
 
@@ -32,21 +32,24 @@ subroutine read_V(V,Vend,flagVfile)
   tmp2=0.d0
   sumq=0.d0
 
-  if (myid .eq. master) write(*,*) 'Reading V'
 
   call index_(VL,VR)
 
 ! real V ... from input files
   if (flagVfile .eqv. .true.) then
 
+  if (myid .eq. master) write(*,*) 'Reading V(q) from ', trim(filename_vq)
+  if (myid .eq. master) write(*,*) 'Reading U from ', trim(filename_umatrix)
+
   call h5open_f(error)
 
   call create_complex_datatype
-    
+
     if (myid .eq. master) then
     ! only master reads and broadcasts to everyone
 
     ! read non-local V(q)
+
       do iq=1,nkp
         call read_vq(iq, vq, filename_vq)
         do l=1,ndim
@@ -70,7 +73,7 @@ subroutine read_V(V,Vend,flagVfile)
           sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
         enddo
         sumq=sumq/nkp ! normalize
-        ! write(*,*) i, j, k, l, sumq
+        write(*,*) i, j, k, l, sumq
         ! make it purley non local if thats not the case
         V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
       enddo
@@ -78,7 +81,7 @@ subroutine read_V(V,Vend,flagVfile)
       enddo
       enddo
 
-      write(*,*) 'sum over V(q) / nkp = ', sumq
+      ! write(*,*) 'sum over V(q) / nkp = ', sumq
 
     ! read local U
       call read_u(u_tmp, filename_umatrix)
@@ -95,12 +98,10 @@ subroutine read_V(V,Vend,flagVfile)
     endif
 
   ! broadcast from master to everyone else
-    ! allocate(mpi_cwork(nkp))
     do l=1,ndim
     do k=1,ndim
     do j=1,ndim
     do i=1,ndim
-      ! mpi_cwork(:) = V(VL(i,j),VR(k,l),:,1)
       call &
       mpi_bcast(V(VL(i,j),VR(k,l),:,1),nkp,mpi_double_complex,master,mpi_comm_world)
     enddo
@@ -162,7 +163,7 @@ subroutine read_V(V,Vend,flagVfile)
     !   V(VL(1,3),VR(3,1),:,iv) = tmp(1,iv)!tmp(2,1)  !
     !   V(VL(2,3),VR(3,2),:,iv) = tmp(1,iv)!tmp(3,1)  !
     ! enddo
-    
+
     ! V(VL(2,1),VR(1,2),:,:) = V(VL(1,2),VR(2,1),:,:)
     ! V(VL(1,2),VR(1,2),:,:) = V(VL(1,2),VR(2,1),:,:)
     ! V(VL(2,1),VR(2,1),:,:) = V(VL(1,2),VR(2,1),:,:)
@@ -184,18 +185,18 @@ subroutine read_V(V,Vend,flagVfile)
 
     ! tmp2=0.d0
     ! call input_Vend(tmp2,"input/V-LLMM.dat",0)
-    ! Vend(VL(1,1),VR(2,2),:) = tmp2(1)!V(VL(1,1),VR(2,2),:,1)! 
-    ! Vend(VL(1,1),VR(3,3),:) = tmp2(2)!V(VL(1,1),VR(3,3),:,1)! 
-    ! Vend(VL(2,2),VR(3,3),:) = tmp2(3)!V(VL(2,2),VR(3,3),:,1)! 
+    ! Vend(VL(1,1),VR(2,2),:) = tmp2(1)!V(VL(1,1),VR(2,2),:,1)!
+    ! Vend(VL(1,1),VR(3,3),:) = tmp2(2)!V(VL(1,1),VR(3,3),:,1)!
+    ! Vend(VL(2,2),VR(3,3),:) = tmp2(3)!V(VL(2,2),VR(3,3),:,1)!
     ! Vend(VL(2,2),VR(1,1),:) = Vend(VL(1,1),VR(2,2),:)
     ! Vend(VL(3,3),VR(1,1),:) = Vend(VL(1,1),VR(3,3),:)
     ! Vend(VL(3,3),VR(2,2),:) = Vend(VL(2,2),VR(3,3),:)
 
     ! tmp2=0.d0
     ! call input_Vend(tmp2,"input/V-LMML.dat",0)
-    ! Vend(VL(1,2),VR(2,1),:) = tmp2(1)!V(VL(1,2),VR(2,1),:,1)! 
-    ! Vend(VL(1,3),VR(3,1),:) = tmp2(2)!V(VL(1,3),VR(3,1),:,1)! 
-    ! Vend(VL(2,3),VR(3,2),:) = tmp2(3)!V(VL(2,3),VR(3,2),:,1)! 
+    ! Vend(VL(1,2),VR(2,1),:) = tmp2(1)!V(VL(1,2),VR(2,1),:,1)!
+    ! Vend(VL(1,3),VR(3,1),:) = tmp2(2)!V(VL(1,3),VR(3,1),:,1)!
+    ! Vend(VL(2,3),VR(3,2),:) = tmp2(3)!V(VL(2,3),VR(3,2),:,1)!
     ! Vend(VL(2,1),VR(1,2),:) = Vend(VL(1,2),VR(2,1),:)
     ! Vend(VL(1,2),VR(1,2),:) = Vend(VL(1,2),VR(2,1),:)
     ! Vend(VL(2,1),VR(2,1),:) = Vend(VL(1,2),VR(2,1),:)
@@ -239,6 +240,8 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
 
   SE = 0.d0
 
+  if (myid .eq. master) write(*,*) 'Reading Self-energy from ', trim(filename_dmft)
+
   ! necessary
   call h5open_f(error)
   call create_complex_datatype
@@ -252,7 +255,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
   call h5aread_f(beta_id, h5t_native_double, beta_dmft, beta_dims, error)
   call h5aclose_f(beta_id, error)
   call h5gclose_f(config_id,error)
- 
+
   if(myid.eq.master) write(*,*) 'beta GW: ', beta
   if(myid.eq.master) write(*,*) 'beta DMFT: ', beta_dmft
 
@@ -262,7 +265,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
   call h5dread_f(mu_id, h5t_native_double, mu, mu_dims, error)
   call h5dclose_f(mu_id, error)
 
-! read Matsubara frequencies iw (big range): 
+! read Matsubara frequencies iw (big range):
   call h5dopen_f(file_id, ".axes/iw", iw_id, error)
   call h5dget_space_f(iw_id, iw_space_id, error)
   call h5sget_simple_extent_dims_f(iw_space_id, iw_dims, iw_maxdims, error)
@@ -304,7 +307,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
 
     ! test siw:
     open(34, file=trim(outfolder)//"/siw.dat", status='unknown')
-    do iw=-iwmax,iwmax-1   
+    do iw=-iwmax,iwmax-1
        write(34,'(100F12.6)')iw_data(iw), (real(siw(iw,i)),aimag(siw(iw,i)), i=1,ndims)
     enddo
     close(34)

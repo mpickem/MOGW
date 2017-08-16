@@ -30,22 +30,23 @@ subroutine read_vq(iq, vq, filename_vq)
   !    write(*,*) 'Inconsistent number of q-points in V^q!', iq_dims(2),'/',nkp
   !    stop
   ! endif
- 
+
   vq = 0.d0
 
   call h5gn_members_f(vq_file_id, "/", nmembers, err)
   do imembers = 1,nmembers - 1
      call h5gget_obj_info_idx_f(vq_file_id, "/", imembers, name_buffer, itype, err)
-     
+
      read(name_buffer,'(I5.5)') ind
      call index2component_band(ndim,ind,i,j,k,l)
-     
+     if (iq .eq. 1)  write(*,*) name_buffer, i, j, k, l
+
      call h5dopen_f(vq_file_id, name_buffer, grp_id, err)
      call h5dread_f(grp_id, type_r_id, vq_tmp_r, vq_dims, err)
      call h5dread_f(grp_id, type_i_id, vq_tmp_i, vq_dims, err)
 
      vq(i,j,k,l) = vq_tmp_r(iq)+ci*vq_tmp_i(iq)
-      
+
      call h5dclose_f(grp_id, err)
   enddo
   call h5fclose_f(vq_file_id, err)
@@ -184,7 +185,7 @@ subroutine index2component_band(Nbands, ind, b1, b2, b3, b4)
   integer :: g1,g2,g3,g4
 
   ! the proposed back conversion assumes the indices are
-  ! given form 0 to max-1  
+  ! given form 0 to max-1
   ind_tmp = ind - 1
   tmp1 = Nbands**3
   tmp2 = Nbands**2

@@ -40,7 +40,6 @@ program gw
   end if
 
   call getarg(1,cmd_arg)
-  write(*,*) 'Reading config: ', trim(cmd_arg)
 
 ! parameters
   open(unit=10,file=trim(cmd_arg), &
@@ -48,7 +47,7 @@ program gw
       read(10,*)
       read(10,*)
       read(10,*) nw    ! number of Matsubara frequencies
-      read(10,*) L     ! number of time discretization point in [0,beta) 
+      read(10,*) L     ! number of time discretization point in [0,beta)
       read(10,*) beta    ! inverse temperature
       read(10,*) mu    ! chemical potential
       read(10,*) dummy   ! total number of particles
@@ -64,19 +63,20 @@ program gw
       read(10,*) filename_vq
       read(10,*)
       read(10,*) filename_dmft
-    close(unit=10)
+  close(unit=10)
 
+  call read_hamiltonian
+  call read_bzindices
+! calls mpi environment ... associates different cores with start and enpoints of ikp .. ikstart/ikend
+  call mpi_env(nkp)
+
+  if(myid.eq.master) write(*,*) 'Creating output folder if necessary: ', trim(outfolder)
   call system("mkdir -p "//trim(outfolder))
   ! no error if existing
 
   if (flagN .eqv. .true.) mu=0.d0 !symmetric bisection start around 0
 
-  call read_hamiltonian
-  call read_bzindices
-  call mpi_env(nkp)
-
   if(myid.eq.master) tstart=mpi_wtime()
-! calls mpi environment ... associates different cores with start and enpoints of ikp .. ikstart/ikend
 
 ! program introduction
   if(myid.eq.master) then
@@ -109,10 +109,11 @@ program gw
 
   ! for first runthrough -> GDMFT(ik)
   ! call read_DMFT_SE(SE_new,mu,filename_dmft)
-  ! if(myid.eq.master) write(*,*) 'mu: ', mu
+  ! if(myid.eq.master) write(*,*) 'mu DMFT: ', mu
 
   ! for first runthrough -> G0(ik)
   SE_new = 0.d0
+
   cyc=0     ! counting cycles
 
   !######################################
@@ -122,9 +123,9 @@ program gw
   SEcycle: do
     SE_old = SE_new ! Saving results - used to calculate new Giw
     deallocate(SE_new)  ! resource management
-    cyc=cyc+1   ! increasing cycle number by 1
+    cyc=cyc+1
 
-    if(myid.eq.master) write(*,*) 'Iteration number: ', cyc
+    if(myid.eq.master) write(*,*) '---------- Iteration number: ', cyc
 
     !######################################
     !############ BISECTION ###############
@@ -135,8 +136,8 @@ program gw
 
       if(myid.eq.master) write(*,*) 'starting bisection'
 
-        mu_max=mu+20.d0         ! Bisection start and end point
-        mu_min=mu-20.d0         ! symmetric around mu of previous cycle (first cycle - mu=0)
+        mu_max=mu+10.d0         ! Bisection start and end point
+        mu_min=mu-10.d0         ! symmetric around mu of previous cycle (first cycle - mu=0)
 
         call compute_Giw(mu_min,Giw,SE_old) ! calculate Giw with mu_min
         call compute_n(n_min,nmin,Giw)    ! calculate ncur_min with Giw
@@ -154,7 +155,7 @@ program gw
 
        ! compare signs and choose mu_mid as new mu_min or mu_max
        if( (real(ntot-nmin) .gt. 0.d0) .and. (real(ntot-nmax) .lt. 0.d0) ) then ! ncur is increasing with mu
-          if (abs(real(ntot-nmid)) .le. 1d-9 ) then
+          if (abs(real(ntot-nmid)) .le. 1d-3 ) then
             mu = mu_mid
             ncur = n_mid    ! array
             n = nmid    ! trace
@@ -192,7 +193,7 @@ program gw
   ! call Giw2Gtau(nw,L,beta,Giw,Gtau)
   ! Computation of Greenfunction (tau)
 
-    if (cyc .eq. 1) then ! only at the first run
+    if (cyc .eq. 1) then ! configuration for one shot calculations
     ! with resource management
       allocate(Gconv(ndim,nkp,2*nw))
       call compute_Gconv(mu,Gconv)    ! Convergence Term for P with updated mu
@@ -204,11 +205,11 @@ program gw
       allocate(W(ndim**2,ndim**2,nkp,nw))
       call compute_W(P,V,W)     ! Computation of screened interaction
       deallocate(P,V)
-      allocate(SE_new(ndim,ndim,nkp,2*nw))    
+      allocate(SE_new(ndim,ndim,nkp,2*nw))
       call compute_SE(Giw,W,Vend,SE_new)  ! Computation of Self-Energy
       deallocate(W,Vend)
     endif
-   
+
 
   ! Difference between old and new Self-Energy - self consistency
     tmp=0.d0
@@ -224,7 +225,7 @@ program gw
       enddo
       enddo
       enddo
-     
+
       tmp = real(maxdif)**2.d0 + aimag(maxdif)**2.d0
       if(myid.eq.master) then
         write(*,*) '# ----------------------------------------------------------------------'

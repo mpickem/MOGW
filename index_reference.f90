@@ -4,7 +4,7 @@ module index_reference
   implicit none
   private
   public :: index_, inverse_l, inverse_r
-    
+
   contains
 
   subroutine index_(x,y)  ! x - left compound index --- y - right compound index
