@@ -1,28 +1,48 @@
-# Makefile for VSC3
+#Makefile for VSC3
 
-FORTRAN = mpiifort
+#Fortran Compiler
+FC = mpiifort
 
 # FFLAGS = -g -O0 -heap-arrays 10 -traceback -check bounds -check uninit -fpe-all=3 # ifort debug
+#Fortran Flags
 FFLAGS = -O3 -g -fpp -DMPI  # ifort production
 
-LIBS = -L$(LIBRARY_PATH) -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
+#Library Directories
+LDIR = -L$(LIBRARY_PATH)
 
-# -L$(MKLROOT)/lib/intel64
-#-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread
-#-lmkl_lapack -lguide
+#Libraries
+LIBS += -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
 
-PROG = gw
-OBJS = aux.o lapack_module.o hamiltonian_module.o index_reference.o four.o mpi_org.o hdf5_module.o vq_module.o \
-			 computation_functions.o read_functions.o gw.o io.o
-# parameters_module.o
+#Include Directories
+IDIR +=
 
-all : $(PROG) $(OBJS)
+#Fortran Sources
+FSOURCES = aux.f90 computation_functions.f90 four.f90 gw.f90 \
+					 hamiltonian_module.f90 hdf5_module.f90 index_reference.f90 \
+					 io.f90 lapack_module.f90 mpi_org.f90 read_functions.f90 \
+					 vq_module.f90
 
-$(PROG) : $(OBJS)
-	$(FORTRAN) -o $(PROG) $(FFLAGS) $(OBJ) $(LDFLAGS) $(LIBS) $^
+#Pattern Substitution from *.f90 to *.o
+OBJ = $(FSOURCES:.f90=.o)
+
+#Compilation Rules
+.PHONY: all
+all: gw
+
+gw: $(OBJ)
+	$(FC) $^ -o $@ $(FFLAGS) $(LDIR) $(LIBS) $(IDIR)
+
+gw.o : aux.o computation_functions.o four.o hamiltonian_module.o hdf5_module.o index_reference.o io.o lapack_module.o mpi_org.o read_functions.o vq_module.o
+hdf5_module.o : hamiltonian_module.o
+vq_module.o : aux.o hamiltonian_module.o hdf5_module.o
+index_reference.o : aux.o hamiltonian_module.o
+computation_functions.o : aux.o index_reference.o hamiltonian_module.o lapack_module.o mpi_org.o
+read_functions.o : aux.o index_reference.o hamiltonian_module.o mpi_org.o hdf5_module.o vq_module.o
+io.o : aux.o hamiltonian_module.o
 
 %.o : %.f90
-	$(FORTRAN) -c $(FFLAGS) $<
+	$(FC) -c $< -o $@ $(FFLAGS) $(IDIR)
 
+.PHONY: clean
 clean :
-	rm -f $(PROG) *.mod *.o
+	rm -f gw *.mod *.o

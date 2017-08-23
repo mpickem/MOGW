@@ -1,31 +1,49 @@
-# Makefile for HCLM
+#Makefile for HCLM
 
-FORTRAN = mpif90
+#Fortran Compiler
+FC = mpif90
+#Fortran Flags
+FFLAGS = -O3 -g -cpp -DMPI -ffree-line-length-512
 
-FFLAGS = -O3 -g -cpp -DMPI -ffree-line-length-512 # ifort production
+#Library Directories
+LDIR += -L$(MKLROOT)/lib/intel64
+LDIR += -L/opt/hdf5-1.8.16_gcc/lib/
 
-LDFLAGS += -I/opt/hdf5-1.8.16_gcc/include/
-LDFLAGS += -L/opt/hdf5-1.8.16_gcc/lib/
+#Libraries
+LIBS += -llapack -lblas -limf
+LIBS += -lmkl_rt
+LIBS += -lhdf5_fortran -lhdf5hl_fortran
 
-FINCLUDE += -I/opt/hdf5-1.8.16_gcc/include/
+#Include Directories
+IDIR += -I/opt/hdf5-1.8.16_gcc/include/
 
-LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran #-lmkl_rt  #-limf
-LDFLAGS += -lhdf5_fortran -lhdf5hl_fortran -llapack -lblas -limf
-LDINCLUDE += -L/opt/hdf5-1.8.16_gcc/lib/
+#Fortran Sources
+FSOURCES = aux.f90 computation_functions.f90 four.f90 gw.f90 \
+					 hamiltonian_module.f90 hdf5_module.f90 index_reference.f90 \
+					 io.f90 lapack_module.f90 mpi_org.f90 read_functions.f90 \
+					 vq_module.f90
 
-LIBS =  -L$(MKLROOT)/lib/intel64 -lmkl_rt
+#Pattern Substitution from *.f90 to *.o
+OBJ = $(FSOURCES:.f90=.o)
 
+#Compilation Rules
+.PHONY: all
+all: gw
 
-PROG = gw
-OBJS = aux.o lapack_module.o hamiltonian_module.o four.o mpi_org.o hdf5_module.o vq_module.o index_reference.o computation_functions.o read_functions.o $(PROG).o io.o
+gw: $(OBJ)
+	$(FC) $^ -o $@ $(FFLAGS) $(LDIR) $(LIBS) $(IDIR)
 
-all : $(PROG) $(OBJS)
-
-$(PROG) : $(OBJS)
-	$(FORTRAN) -o $(PROG) $(FFLAGS) $(OBJ) $(LDFLAGS) $(LIBS) $^
+gw.o : aux.o computation_functions.o four.o hamiltonian_module.o hdf5_module.o index_reference.o io.o lapack_module.o mpi_org.o read_functions.o vq_module.o
+hdf5_module.o : hamiltonian_module.o
+vq_module.o : aux.o hamiltonian_module.o hdf5_module.o
+index_reference.o : aux.o hamiltonian_module.o
+computation_functions.o : aux.o index_reference.o hamiltonian_module.o lapack_module.o mpi_org.o
+read_functions.o : aux.o index_reference.o hamiltonian_module.o mpi_org.o hdf5_module.o vq_module.o
+io.o : aux.o hamiltonian_module.o
 
 %.o : %.f90
-	$(FORTRAN) -c $(FFLAGS) $(LDFLAGS) $(LDINCLUDE) $< 
+	$(FC) -c $< -o $@ $(FFLAGS) $(IDIR)
 
+.PHONY: clean
 clean :
-	rm -f $(PROG) *.mod *.o
+	rm -f gw *.mod *.o
