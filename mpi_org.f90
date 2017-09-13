@@ -4,7 +4,7 @@ module mpi_org
 ! #define dp 8
 
 #ifdef MPI
-  use mpi_f08 ! latest MPI Standard -- use with latest mpi and intel compiler
+  use mpi!_f08 ! latest MPI Standard -- use with latest mpi and intel compiler
 #endif
 
 integer nproc,myid,master,mpierr,ikstart,ikend,nkthis,ncount

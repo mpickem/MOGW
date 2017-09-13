@@ -110,7 +110,7 @@ module hdf5_module
 
      do iwb=0,2*iwbmax
 
-        write(name_buffer, '(I5.5)'), iwb
+        write(name_buffer, '(I5.5)') iwb
         call h5gcreate_f(grp_dens_id, name_buffer, iw_magn_id, err)
         call h5gcreate_f(grp_magn_id, name_buffer, iw_dens_id, err)
         call h5gclose_f(iw_magn_id, err)
@@ -172,9 +172,9 @@ module hdf5_module
      integer(hid_t) :: file_id
 
      if (ichannel==1) then
-        write(grpname, '(A5,(I5.5),A1,(I5.5))'), "magn/", iwb, "/", ind_orb
+        write(grpname, '(A5,(I5.5),A1,(I5.5))') "magn/", iwb, "/", ind_orb
      else
-        write(grpname, '(A5,(I5.5),A1,(I5.5))'), "dens/", iwb, "/", ind_orb
+        write(grpname, '(A5,(I5.5),A1,(I5.5))') "dens/", iwb, "/", ind_orb
      endif
         
      call h5gopen_f(file_id, grpname, grp_id, err)
