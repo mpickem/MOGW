@@ -155,7 +155,7 @@ program gw
 
        ! compare signs and choose mu_mid as new mu_min or mu_max
        if( (real(ntot-nmin) .gt. 0.d0) .and. (real(ntot-nmax) .lt. 0.d0) ) then ! ncur is increasing with mu
-          if (abs(real(ntot-nmid)) .le. 1d-3 ) then
+          if (abs(real(ntot-nmid)) .le. 1d-2 ) then
             mu = mu_mid
             ncur = n_mid    ! array
             n = nmid    ! trace

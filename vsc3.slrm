@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH -N 10
+#SBATCH -N 3
 #SBATCH -J mogw_srvo3_b10
 #SBATCH --ntasks-per-node=16
-#SBATCH --partition=mem_0128
-#SBATCH --qos=devel_0128
-#SBATCH --time=00:10:00
+#SBATCH --partition=mem_0064
+#SBATCH --qos=normal_0064
+#SBATCH --time=05:00:00
 
 . vsc3modules
 

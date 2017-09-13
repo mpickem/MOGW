@@ -40,7 +40,7 @@ computation_functions.o : aux.o index_reference.o hamiltonian_module.o lapack_mo
 read_functions.o : aux.o index_reference.o hamiltonian_module.o mpi_org.o hdf5_module.o vq_module.o
 io.o : aux.o hamiltonian_module.o
 
-%.o : %.f90
+$(OBJ): %.o : %.f90
 	$(FC) -c $< -o $@ $(FFLAGS) $(IDIR)
 
 .PHONY: clean

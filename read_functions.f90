@@ -50,36 +50,36 @@ subroutine read_V(V,Vend,flagVfile)
 
     ! read non-local V(q)
 
-      do iq=1,nkp
-        call read_vq(iq, vq, filename_vq)
-        do l=1,ndim
-        do k=1,ndim
-        do j=1,ndim
-        do i=1,ndim
-          V(VL(i,j),VR(k,l),iq,1) = V(VL(i,j),VR(k,l),iq,1) + vq(i,j,k,l)
-        enddo
-        enddo
-        enddo
-        enddo
-      enddo
+      ! do iq=1,nkp
+      !   call read_vq(iq, vq, filename_vq)
+      !   do l=1,ndim
+      !   do k=1,ndim
+      !   do j=1,ndim
+      !   do i=1,ndim
+      !     V(VL(i,k),VR(j,l),iq,1) = V(VL(i,k),VR(j,l),iq,1) + vq(i,j,k,l)
+      !   enddo
+      !   enddo
+      !   enddo
+      !   enddo
+      ! enddo
 
-      ! check wether V(q) is purely non local
-      do l=1,ndim
-      do k=1,ndim
-      do j=1,ndim
-      do i=1,ndim
-        sumq = 0.d0
-        do iq=1,nkp
-          sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
-        enddo
-        sumq=sumq/nkp ! normalize
-        write(*,*) i, j, k, l, sumq
-        ! make it purley non local if thats not the case
-        V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
-      enddo
-      enddo
-      enddo
-      enddo
+      ! ! check wether V(q) is purely non local
+      ! do l=1,ndim
+      ! do k=1,ndim
+      ! do j=1,ndim
+      ! do i=1,ndim
+      !   sumq = 0.d0
+      !   do iq=1,nkp
+      !     sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
+      !   enddo
+      !   sumq=sumq/nkp ! normalize
+      !   write(*,*) i, j, k, l, sumq
+      !   ! make it purley non local if thats not the case
+      !   V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
+      ! enddo
+      ! enddo
+      ! enddo
+      ! enddo
 
       ! write(*,*) 'sum over V(q) / nkp = ', sumq
 
@@ -89,7 +89,12 @@ subroutine read_V(V,Vend,flagVfile)
       do k=1,ndim
       do j=1,ndim
       do i=1,ndim
-        V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) + u_tmp(i,j,k,l) ! static hubbard term
+        ! ATTENTION HERE
+        ! ADGA UMATRIX FORMAT IS USED
+        ! LMML - spinflip -- LMLM - U' -- LLMM - double hopping
+        ! HERE
+        ! LMML - double hopping -- LMLM - spinflip -- LLMM - U'
+        V(VL(i,k),VR(j,l),:,1) = V(VL(i,k),VR(j,l),:,1) + u_tmp(i,j,k,l) ! static hubbard term
       enddo
       enddo
       enddo
