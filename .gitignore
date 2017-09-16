@@ -8,24 +8,38 @@
 *.png
 *.jpg
 *.eps
+*.slrm
+
 # object files from ifort
 *.o
+
 # module files from ifort
 *.mod
+
 # random fortran output files
 fort.*
+
 # vim files
 .*
 *.swp
 *~
 ~*
+
 # binary
 gw
+gw_*
+
 # large hdf5 files
 *.hdf5
+
 # data files
 HMLT*
 *.hk
+
 # output folders
 output*/**
 Output*/**
+
+# input folder
+input*/**
+Input*/**

@@ -39,7 +39,7 @@ subroutine read_vq(iq, vq, filename_vq)
 
      read(name_buffer,'(I5.5)') ind
      call index2component_band(ndim,ind,i,j,k,l)
-     if (iq .eq. 1)  write(*,*) name_buffer, i, j, k, l
+     ! if (iq .eq. 1)  write(*,*) name_buffer, i, j, k, l
 
      call h5dopen_f(vq_file_id, name_buffer, grp_id, err)
      call h5dread_f(grp_id, type_r_id, vq_tmp_r, vq_dims, err)

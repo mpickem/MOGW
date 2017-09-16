@@ -1,16 +1,14 @@
 module mpi_org
 
-! #define qp 16
-! #define dp 8
-
 #ifdef MPI
   use mpi!_f08 ! latest MPI Standard -- use with latest mpi and intel compiler
 #endif
 
-integer nproc,myid,master,mpierr,ikstart,ikend,nkthis,ncount
-integer, allocatable:: displs(:),rcounts(:)
-character(len=4)chmyid
-complex(kind=8), allocatable ::mpi_cwork(:),mpi_cwork3(:,:,:)
+integer :: nproc, myid, master, mpierr
+integer :: ikstart, ikend, nkthis, ncount
+integer, allocatable  :: displs(:),rcounts(:)
+character(len=80) :: chmyid
+complex(kind=8), allocatable :: mpi_cwork(:), mpi_cwork3(:,:,:)
 complex(kind=8), allocatable :: sndbuf(:)
 
 contains
@@ -19,12 +17,9 @@ contains
     implicit none
 #ifdef MPI
     deallocate(rcounts,displs)
-    ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
     call MPI_FINALIZE( mpierr )
 #endif
   end subroutine mpi_close
-
-
 
   subroutine mpi_env(nk)
     implicit none
@@ -43,7 +38,7 @@ contains
     enddo
     call select_krange(myid,nk,ikstart,ikend)
 #ifdef DEBUG
-    call prepare_chmyid(myid,chmyid)
+    write(chmyid,'(I5.5)') myid
     open(99,file='debug_'//trim(chmyid),status='unknown',position='append')
     write(99,'(100I12)')ikstart,ikend,nk,displs(myid+1),rcounts(myid+1),nproc
     close(99)
@@ -75,26 +70,5 @@ contains
     ncount=ikend-ikstart+1
     return
   end subroutine select_krange
-
-
-
-subroutine prepare_chmyid(myid,chmyid)
-  implicit none
-  integer myid
-  character(len=*)chmyid
-
-  if (myid.lt.10) then
-     write(chmyid,'(1I1)')myid
-  else
-     if (myid.lt.100) then
-        write(chmyid,'(1I2)')myid
-     else
-        write(chmyid,'(1I3)')myid
-     endif
-  endif
-  return
-end subroutine prepare_chmyid
-
-
 
 end module mpi_org

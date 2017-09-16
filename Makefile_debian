@@ -1,4 +1,4 @@
-#Makefile for VSC3
+#Makefile for my debian laptop
 
 #Fortran Compiler
 FC = mpif90
@@ -39,6 +39,7 @@ index_reference.o : aux.o hamiltonian_module.o
 computation_functions.o : aux.o index_reference.o hamiltonian_module.o lapack_module.o mpi_org.o
 read_functions.o : aux.o index_reference.o hamiltonian_module.o mpi_org.o hdf5_module.o vq_module.o
 io.o : aux.o hamiltonian_module.o
+hamiltonian_module.o : aux.o
 
 $(OBJ): %.o : %.f90
 	$(FC) -c $< -o $@ $(FFLAGS) $(IDIR)

@@ -1,4 +1,5 @@
 program gw
+  use aux
   use computation_functions
   use read_functions
   use index_reference
@@ -58,6 +59,8 @@ program gw
       read(10,*) flagVfile   ! flag for V-array from files
       read(10,*)
       read(10,*) outfolder
+      read(10,*)
+      read(10,*) hamfolder
       read(10,*)
       read(10,*) filename_umatrix
       read(10,*) filename_vq
@@ -201,7 +204,7 @@ program gw
       call compute_P(mu,Giw,Gconv,P)  ! Computation of Polarization (iv,iq) with G*G
       deallocate(Gconv)
       allocate(V(ndim**2,ndim**2,nkp,nw),Vend(ndim**2,ndim**2,nkp))
-      call read_V(V,Vend,flagVfile)   ! reading input files to creating V matrix
+      call read_V(V,Vend,flagVfile)   ! reading input files to create V matrix
       allocate(W(ndim**2,ndim**2,nkp,nw))
       call compute_W(P,V,W)     ! Computation of screened interaction
       deallocate(P,V)

@@ -38,52 +38,52 @@ subroutine read_V(V,Vend,flagVfile)
 ! real V ... from input files
   if (flagVfile .eqv. .true.) then
 
-  if (myid .eq. master) write(*,*) 'Reading V(q) from ', trim(filename_vq)
-  if (myid .eq. master) write(*,*) 'Reading U from ', trim(filename_umatrix)
 
   call h5open_f(error)
 
   call create_complex_datatype
 
-    if (myid .eq. master) then
+    ! if (myid .eq. master) then
     ! only master reads and broadcasts to everyone
 
     ! read non-local V(q)
 
-      ! do iq=1,nkp
-      !   call read_vq(iq, vq, filename_vq)
-      !   do l=1,ndim
-      !   do k=1,ndim
-      !   do j=1,ndim
-      !   do i=1,ndim
-      !     V(VL(i,k),VR(j,l),iq,1) = V(VL(i,k),VR(j,l),iq,1) + vq(i,j,k,l)
-      !   enddo
-      !   enddo
-      !   enddo
-      !   enddo
-      ! enddo
+      if (myid .eq. master) write(*,*) 'Reading V(q) from ', trim(filename_vq)
 
-      ! ! check wether V(q) is purely non local
-      ! do l=1,ndim
-      ! do k=1,ndim
-      ! do j=1,ndim
-      ! do i=1,ndim
-      !   sumq = 0.d0
-      !   do iq=1,nkp
-      !     sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
-      !   enddo
-      !   sumq=sumq/nkp ! normalize
-      !   write(*,*) i, j, k, l, sumq
-      !   ! make it purley non local if thats not the case
-      !   V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
-      ! enddo
-      ! enddo
-      ! enddo
-      ! enddo
+      do iq=1,nkp
+        call read_vq(iq, vq, filename_vq)
+        do l=1,ndim
+        do k=1,ndim
+        do j=1,ndim
+        do i=1,ndim
+          V(VL(i,k),VR(j,l),iq,1) = V(VL(i,k),VR(j,l),iq,1) + vq(i,j,k,l)
+        enddo
+        enddo
+        enddo
+        enddo
+      enddo
 
-      ! write(*,*) 'sum over V(q) / nkp = ', sumq
+      ! check wether V(q) is purely non local
+      do l=1,ndim
+      do k=1,ndim
+      do j=1,ndim
+      do i=1,ndim
+        sumq = 0.d0
+        do iq=1,nkp
+          sumq = sumq + V(VL(i,j),VR(k,l),iq,1)
+        enddo
+        sumq=sumq/nkp ! normalize
+        ! write(*,*) i, j, k, l, sumq
+        ! make it purley non local if thats not the case
+        V(VL(i,j),VR(k,l),:,1) = V(VL(i,j),VR(k,l),:,1) - sumq
+      enddo
+      enddo
+      enddo
+      enddo
 
     ! read local U
+      if (myid .eq. master) write(*,*) 'Reading U from ', trim(filename_umatrix)
+
       call read_u(u_tmp, filename_umatrix)
       do l=1,ndim
       do k=1,ndim
@@ -93,26 +93,27 @@ subroutine read_V(V,Vend,flagVfile)
         ! ADGA UMATRIX FORMAT IS USED
         ! LMML - spinflip -- LMLM - U' -- LLMM - double hopping
         ! HERE
-        ! LMML - double hopping -- LMLM - spinflip -- LLMM - U'
+        ! LMML - spinflip -- LMLM - double hopping -- LLMM - U'
         V(VL(i,k),VR(j,l),:,1) = V(VL(i,k),VR(j,l),:,1) + u_tmp(i,j,k,l) ! static hubbard term
       enddo
       enddo
       enddo
       enddo
 
-    endif
+
+    ! endif
 
   ! broadcast from master to everyone else
-    do l=1,ndim
-    do k=1,ndim
-    do j=1,ndim
-    do i=1,ndim
-      call &
-      mpi_bcast(V(VL(i,j),VR(k,l),:,1),nkp,mpi_double_complex,master,mpi_comm_world)
-    enddo
-    enddo
-    enddo
-    enddo
+    ! do l=1,ndim
+    ! do k=1,ndim
+    ! do j=1,ndim
+    ! do i=1,ndim
+    !   call &
+    !   mpi_bcast(V(VL(i,j),VR(k,l),:,1),nkp,mpi_double_complex,master,mpi_comm_world)
+    ! enddo
+    ! enddo
+    ! enddo
+    ! enddo
     ! deallocate(mpi_cwork)
 
 
@@ -122,6 +123,15 @@ subroutine read_V(V,Vend,flagVfile)
       V(:,:,:,i) = V(:,:,:,1)
     enddo
     Vend(:,:,:) = V(:,:,:,1)
+
+
+    if (myid .eq. master) then
+    open(unit=10,file=trim(outfolder)//'/viw_test.dat')
+    do iq=1,nkp
+      write(10,*) real(V(1,1,iq,1)), aimag(V(1,1,iq,1))
+    enddo
+    close(10)
+    endif
 
 ! #ifdef MPI
 ! ! parallelization - communication
@@ -322,7 +332,7 @@ subroutine read_DMFT_SE(SE,mu,filename_dmft)
     ! DMFT ... therefore without q dependency
     do i=1,ndim
     do iw=1,2*nw
-      SE(i,i,:,iw)=siw(iw-1,i)
+      SE(i,i,:,iw)=siw(iw-1,i) ! here 1: i pi /b ... w2d: 0: i pi /b
     enddo
     enddo
 

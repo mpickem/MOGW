@@ -1,6 +1,6 @@
 # Parameter file for gw_MO
 #----------------------------------------------------------------------
-100  # nw .. number of Matsubara frequencies
+100   # nw .. number of Matsubara frequencies
 64    # L .. number of time dicretization point in [0,beta)
 10    # beta .. inverse Temperature
 0     # mu .. chemical potential
@@ -10,9 +10,11 @@ T     # flagN .. T = adapt mu in order to get ntot particles
 F     # flagSE .. T = activate SE self-consistent cycle
 T     # flagVfile .. T = read V array data from files
 #----------------------------------------------------------------------
-"output-bugfix"
+"output-G0-u+vq"        # output folder
 #----------------------------------------------------------------------
-"input/umatrix.dat"
-"input/V_q_40-40-40_20-20-20.hdf5"
+"input"                 # folder containing HMLT, HMLT.index.kpq, HMLT.index.mq
 #----------------------------------------------------------------------
-"input/SVO-VERTEX-2016-07-14-Thu-07-24-43.hdf5"
+"input/umatrix.dat"     # umatrix file
+"input/V_q_40-40-40_20-20-20.hdf5"    # v(q) file
+#----------------------------------------------------------------------
+"input/SVO-VERTEX-2016-07-14-Thu-07-24-43.hdf5"   # w2d dmft file for self energy

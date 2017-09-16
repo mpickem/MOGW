@@ -272,7 +272,7 @@ subroutine compute_P(mu,Giw,Gconv,P)
     if( abs(real(h(i,i,ikpq(ikp,ikq))-h(j,j,ikp))) .lt. 1.d-8) then
     P(IL(i,j),IR(j,i),ikq,1) = P(IL(i,j),IR(j,i),ikq,1) - beta*exp(beta*(real(h(j,j,ikp))-mu)) * wtkp(ikp) &
               / (exp(beta*(real(h(j,j,ikp))-mu))+1.d0)**2.d0
-    write(*,*) 'P special case needed'
+    ! write(*,*) 'P special case needed'
     else    ! same formula as below with iv=1
     P(IL(i,j),IR(j,i),ikq,1) = P(IL(i,j),IR(j,i),ikq,1) + ((1.d0/(exp((real(h(i,i,ikpq(ikp,ikq)))-mu)*beta)+1.d0)) &
         - (1.d0/(exp((real(h(j,j,ikp))-mu)*beta)+1.d0))) &

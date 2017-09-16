@@ -8,13 +8,14 @@ FC = mpiifort
 FFLAGS = -O3 -g -fpp -DMPI  # ifort production
 
 #Library Directories
-LDIR = -L$(LIBRARY_PATH)
+LDIR = -L/opt/sw/x86_64/glibc-2.17/ivybridge-ep/hdf5/1.8.18/intel/17/intel-mpi/2017/lib \
+			 -L/cm/shared/apps/intel/compilers_and_libraries_2017.4.196/linux/mkl/lib/intel64
 
 #Libraries
 LIBS += -lmkl_rt -lhdf5_fortran -lhdf5hl_fortran
 
 #Include Directories
-IDIR +=
+IDIR += -I/opt/sw/x86_64/glibc-2.17/ivybridge-ep/hdf5/1.8.18/intel/17/intel-mpi/2017/include
 
 #Fortran Sources
 FSOURCES = aux.f90 computation_functions.f90 four.f90 gw.f90 \
@@ -39,6 +40,7 @@ index_reference.o : aux.o hamiltonian_module.o
 computation_functions.o : aux.o index_reference.o hamiltonian_module.o lapack_module.o mpi_org.o
 read_functions.o : aux.o index_reference.o hamiltonian_module.o mpi_org.o hdf5_module.o vq_module.o
 io.o : aux.o hamiltonian_module.o
+hamiltonian_module.o : aux.o
 
 $(OBJ): %.o : %.f90
 	$(FC) -c $< -o $@ $(FFLAGS) $(IDIR)
