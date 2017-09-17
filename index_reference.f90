@@ -10,7 +10,7 @@ module index_reference
   subroutine index_(x,y)  ! x - left compound index --- y - right compound index
   ! this can also be done via a function written like below - however it is faster to do one loop since every index is used anyways
     integer, intent(out) :: x(ndim,ndim),y(ndim,ndim)  ! x = 1 ... ndim**2 = y ---- Polarization arrays have to be changed
-    integer :: cnt,i,j
+    integer              :: cnt,i,j
 
     cnt=1
 

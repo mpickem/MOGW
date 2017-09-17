@@ -6,20 +6,20 @@ module computation_functions
   use mpi_org
   implicit none
   character(len=80) :: filen
-  private :: filen
-  public :: compute_Giw, compute_Gconv, compute_P, compute_W, compute_n
+  private           :: filen
+  public            :: compute_Giw, compute_Gconv, compute_P, compute_W, compute_n
 
 contains
 
 subroutine compute_Giw(mu,Giw,SE)
 ! input/output
-  real(dp), intent(in) :: mu
-  complex(kind=8), intent(out) :: Giw(ndim,ndim,nkp,2*nw)
+  real(dp), intent(in)           :: mu
+  complex(kind=8), intent(out)   :: Giw(ndim,ndim,nkp,2*nw)
   complex(kind=8), intent(inout) :: SE(ndim,ndim,nkp,2*nw)  !inout because of Continuation
 
 ! auxiliaries
-  integer :: ikp,iw,i,j,ina,inb
-  complex(kind=8), allocatable :: cmat(:,:)
+  integer                        :: ikp,iw,i,j,ina,inb
+  complex(kind=8), allocatable   :: cmat(:,:)
 
 ! initialization
   Giw = 0.d0
@@ -106,11 +106,11 @@ end subroutine compute_Giw
 
 subroutine compute_Gconv(mu,Gconv)
 ! input/output
-  real(dp), intent(in) :: mu
+  real(dp), intent(in)         :: mu
   complex(kind=8), intent(out) :: Gconv(ndim,nkp,2*nw)
 
 ! auxiliaries
-  integer :: ikp,iw,i,ina
+  integer                      :: ikp,iw,i,ina
   complex(kind=8), allocatable :: cmat(:)
 
 ! compute Gtilde_ii(k,iw) = [ iw + mu - real(H(k))]^{-1}
@@ -148,15 +148,15 @@ end subroutine compute_Gconv
 
 subroutine compute_P(mu,Giw,Gconv,P)
 !input/output
-  real(dp), intent(in) :: mu
-  complex(kind=8), intent(in) :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(in) :: Gconv(ndim,nkp,2*nw)
+  real(dp), intent(in)         :: mu
+  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
+  complex(kind=8), intent(in)  :: Gconv(ndim,nkp,2*nw)
   complex(kind=8), intent(out) :: P(ndim**2,ndim**2,nkp,nw)
 
 !auxiliaries
-  integer :: iv,ikq,iw,ikp,i,j,k,l,ina,inb
-  complex(kind=8) :: G1,G2,ctmp
-  integer :: IL(ndim,ndim),IR(ndim,ndim)
+  integer                      :: iv,ikq,iw,ikp,i,j,k,l,ina,inb
+  complex(kind=8)              :: G1,G2,ctmp
+  integer                      :: IL(ndim,ndim),IR(ndim,ndim)
 
 !initialization
   P = 0.d0
@@ -326,12 +326,12 @@ end subroutine compute_P
 
 subroutine Giw2Gtau(L,Giw,Gtau)
 ! input/output
-  integer, intent(in) :: L
-  complex(kind=8), intent(in) :: Giw(ndim,ndim,nkp,nw)
-  real(dp), intent(out) :: Gtau(ndim,ndim,nkp,nw)
+  integer, intent(in)          :: L
+  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,nw)
+  real(dp), intent(out)        :: Gtau(ndim,ndim,nkp,nw)
 
 ! auxiliaries
-  integer :: ikp,ina,inb
+  integer                      :: ikp,ina,inb
   complex(kind=8), allocatable :: mat(:,:)
 
   Gtau = 0.d0 ! initialization
@@ -375,11 +375,11 @@ end subroutine Giw2Gtau
 
 subroutine compute_W(P,V,W)
 ! input/output
-  complex(kind=8),intent(in) :: P(ndim**2,ndim**2,nkp,nw),V(ndim**2,ndim**2,nkp,nw)
-  complex(kind=8),intent(out) :: W(ndim**2,ndim**2,nkp,nw)
+  complex(kind=8), intent(in)  :: P(ndim**2,ndim**2,nkp,nw),V(ndim**2,ndim**2,nkp,nw)
+  complex(kind=8), intent(out) :: W(ndim**2,ndim**2,nkp,nw)
 
 ! auxiliaries
-  integer :: iv,ikq,i,ina,inb
+  integer                      :: iv,ikq,i,ina,inb
   complex(kind=8), allocatable :: dmat(:,:)
 
  ! initialization
@@ -432,16 +432,16 @@ end subroutine compute_W
 
 subroutine compute_SE(Giw,W,Vend,SE)
 ! input/output
-  complex(kind=8), intent(in) :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(in) :: Vend(ndim**2,ndim**2,nkp)
-  complex(kind=8), intent(in) :: W(ndim**2,ndim**2,nkp,nw)
+  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
+  complex(kind=8), intent(in)  :: Vend(ndim**2,ndim**2,nkp)
+  complex(kind=8), intent(in)  :: W(ndim**2,ndim**2,nkp,nw)
   complex(kind=8), intent(out) :: SE(ndim,ndim,nkp,2*nw)
 
 ! auxiliaries
-  integer :: iw,ikp,iv,ikq,i,j,k,l,ina,inb
-  complex(kind=8) :: tmpW(ndim,ndim,ndim,ndim,nkp,nw)
-  complex(kind=8) :: tmpVend(ndim,ndim,ndim,ndim,nkp)
-  complex(kind=8) :: FT(ndim,ndim,nkp,2*nw),ST(ndim,ndim,nkp,2*nw)
+  integer                      :: iw,ikp,iv,ikq,i,j,k,l,ina,inb
+  complex(kind=8)              :: tmpW(ndim,ndim,ndim,ndim,nkp,nw)
+  complex(kind=8)              :: tmpVend(ndim,ndim,ndim,ndim,nkp)
+  complex(kind=8)              :: FT(ndim,ndim,nkp,2*nw),ST(ndim,ndim,nkp,2*nw)
 ! initialization
 
   SE = 0.d0
@@ -610,12 +610,12 @@ end subroutine compute_SE
 
 subroutine compute_n(ncur,trace,Giw)
 ! input/output
-  complex(kind=8), intent(in) :: Giw(ndim,ndim,nkp,2*nw)
+  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
   complex(kind=8), intent(out) :: ncur(ndim,ndim)
   complex(kind=8), intent(out) :: trace
 
 ! auxiliaries
-  integer :: iw,ikp,i,j
+  integer                      :: iw,ikp,i,j
 
 ! initialization
   ncur=0.d0

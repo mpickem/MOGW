@@ -14,16 +14,16 @@ module read_functions
 
 subroutine read_V(V,Vend,flagVfile)
 ! input / output
-  logical, intent(in) :: flagVfile
+  logical, intent(in)          :: flagVfile
   complex(kind=8), intent(out) :: V(ndim**2,ndim**2,nkp,nw),Vend(ndim**2,ndim**2,nkp)
-  real(dp) :: u_tmp(ndim,ndim,ndim,ndim)
-  complex(kind=8) :: vq(ndim,ndim,ndim,ndim)
+  real(dp)                     :: u_tmp(ndim,ndim,ndim,ndim)
+  complex(kind=8)              :: vq(ndim,ndim,ndim,ndim)
 
 ! auxiliaries
-  integer :: VL(ndim,ndim), VR(ndim,ndim),iv
-  integer :: i,j,k,l,iq,ina,inb, error
-  double precision :: tmp(ndim,nw),tmp2(ndim)
-  complex(dp) :: sumq
+  integer                      :: VL(ndim,ndim), VR(ndim,ndim),iv
+  integer                      :: i,j,k,l,iq,ina,inb, error
+  double precision             :: tmp(ndim,nw),tmp2(ndim)
+  complex(dp)                  :: sumq
 
 ! initialization
   V=0.d0
@@ -237,20 +237,20 @@ subroutine read_V(V,Vend,flagVfile)
 end subroutine read_V
 
 subroutine read_DMFT_SE(SE,mu,filename_dmft)
-  character(len=80), intent(in) :: filename_dmft
-  complex(dp), intent(inout) :: SE(ndim,ndim,nkp,2*nw)
+  character(len=80), intent(in)  :: filename_dmft
+  complex(dp), intent(inout)     :: SE(ndim,ndim,nkp,2*nw)
   double precision,intent(inout) :: mu
 
-  double precision :: beta_dmft
-  integer :: error, iwmax, ndims, iband, iw, i
-  integer(hid_t) :: file_id, iw_id, siw_id, iw_space_id, iwb_space_id
-  integer(hid_t) :: iwf_space_id, siw_space_id, mu_id, config_id, beta_id
+  double precision               :: beta_dmft
+  integer                        :: error, iwmax, ndims, iband, iw, i
+  integer(hid_t)                 :: file_id, iw_id, siw_id, iw_space_id, iwb_space_id
+  integer(hid_t)                 :: iwf_space_id, siw_space_id, mu_id, config_id, beta_id
   integer(hsize_t), dimension(0) :: mu_dims, beta_dims
   integer(hsize_t), dimension(1) :: iw_dims, iw_maxdims, iwb_dims, iwf_dims
   integer(hsize_t), dimension(3) :: siw_dims, siw_maxdims
-  double precision, allocatable :: iw_data(:), iwb_data(:), iwf_data(:)
-  double precision, allocatable :: siw_data(:,:,:,:)
-  complex(dp), allocatable :: siw(:,:)
+  double precision, allocatable  :: iw_data(:), iwb_data(:), iwf_data(:)
+  double precision, allocatable  :: siw_data(:,:,:,:)
+  complex(dp), allocatable       :: siw(:,:)
 
 
   SE = 0.d0

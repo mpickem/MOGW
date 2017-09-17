@@ -10,17 +10,17 @@ contains
 !===============================================================================================================================
 subroutine read_vq(iq, vq, filename_vq)
   implicit none
-  integer, intent(in) :: iq
+  integer, intent(in)            :: iq
   ! complex(kind=8), intent(out) :: v(ndim**2,ndim**2)
-  complex(kind=8) :: vq(ndim,ndim,ndim,ndim)
-  integer(hid_t) :: vq_file_id, grp_id, iq_id, iq_space_id
-  integer :: err, ind, i, j, k, l, i1, i2
-  integer(hid_t) :: nmembers, imembers, itype
-  character(len=20) :: name_buffer
-  character(len=80) :: filename_vq
+  complex(kind=8)                :: vq(ndim,ndim,ndim,ndim)
+  integer(hid_t)                 :: vq_file_id, grp_id, iq_id, iq_space_id
+  integer                        :: err, ind, i, j, k, l, i1, i2
+  integer(hid_t)                 :: nmembers, imembers, itype
+  character(len=20)              :: name_buffer
+  character(len=80)              :: filename_vq
   integer(hsize_t), dimension(2) :: iq_dims, iq_maxdims
   integer(hsize_t), dimension(1) :: vq_dims
-  double precision :: vq_tmp_r(nkp), vq_tmp_i(nkp)
+  double precision               :: vq_tmp_r(nkp), vq_tmp_i(nkp)
 
   call h5fopen_f(filename_vq, h5f_acc_rdonly_f, vq_file_id, err)
   call h5dopen_f(vq_file_id, ".axes/Q-points", iq_id, err)
@@ -73,11 +73,11 @@ end subroutine read_vq
 !========================================================================================================
 subroutine read_u(u_tmp, filename_umatrix)
   implicit none
-  real(kind=8) :: u_tmp(ndim,ndim,ndim,ndim), u_tilde_tmp(ndim,ndim,ndim,ndim)
-  real(kind=8) :: u_value
+  real(kind=8)      :: u_tmp(ndim,ndim,ndim,ndim), u_tilde_tmp(ndim,ndim,ndim,ndim)
+  real(kind=8)      :: u_value
   ! complex(kind=8), intent(out) :: u(ndim**2, ndim**2), u_tilde(ndim**2, ndim**2)
   ! complex(kind=8), intent(out) :: u_tilde(ndim**2, ndim**2)
-  integer :: n,i,j,k,l,i1,i2
+  integer           :: n,i,j,k,l,i1,i2
   character(len=80) :: filename_umatrix
 
   open(21,file=trim(filename_umatrix),status='old')
@@ -166,8 +166,8 @@ end module vq_module
 
 subroutine component2index_band(Nbands, ind, b1, b2, b3, b4)
   implicit none
-  integer,intent(in) :: Nbands
-  integer,intent(in) :: b1, b2, b3, b4
+  integer,intent(in)  :: Nbands
+  integer,intent(in)  :: b1, b2, b3, b4
   integer,intent(out) :: ind
 
   ind =  Nbands**3*(b1-1) + Nbands**2*(b2-1) + Nbands*(b3-1) + b4
@@ -179,10 +179,10 @@ end subroutine component2index_band
 ! converting an index into a band pattern
 subroutine index2component_band(Nbands, ind, b1, b2, b3, b4)
   implicit none
-  integer,intent(in) :: Nbands,ind
+  integer,intent(in)  :: Nbands,ind
   integer,intent(out) :: b1, b2, b3, b4
-  integer :: tmp1,tmp2,tmp3,ind_tmp
-  integer :: g1,g2,g3,g4
+  integer             :: tmp1, tmp2, tmp3, ind_tmp
+  integer             :: g1, g2, g3, g4
 
   ! the proposed back conversion assumes the indices are
   ! given form 0 to max-1
@@ -197,4 +197,3 @@ subroutine index2component_band(Nbands, ind, b1, b2, b3, b4)
   b4 = (ind_tmp-tmp1*(b1-1)-tmp2*(b2-1)-tmp3*(b3-1)) + 1
 
 end subroutine index2component_band
-

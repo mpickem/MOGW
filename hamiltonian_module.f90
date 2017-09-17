@@ -2,12 +2,12 @@ module hamiltonian_module
   use aux
   implicit none
   private
-  integer, public :: ndim,nkp,nsham,ntet,idim
-  double precision, public ::efermi
+  integer, public                             :: ndim,nkp,nsham,ntet,idim
+  double precision, public                    :: efermi
   double precision, allocatable, public, save :: wtkp(:)
-  complex(kind=8),   allocatable, public, save :: h(:,:,:)
-  double precision, allocatable, public,save:: bk(:,:)
-  integer, allocatable, public :: ikpq(:,:),imq(:)
+  complex(kind=8), allocatable, public, save  :: h(:,:,:)
+  double precision, allocatable, public,save  :: bk(:,:)
+  integer, allocatable, public                :: ikpq(:,:),imq(:)
 
   public read_hamiltonian
   public read_hamiltonian_n
@@ -22,10 +22,10 @@ contains
 !
     implicit none
     
-    integer :: i, j, ikp, ios, ntet
-    integer, allocatable :: itt(:,:)
+    integer                       :: i, j, ikp, ios, ntet
+    integer, allocatable          :: itt(:,:)
     double precision, parameter   :: Ry2eV = 1.36058d+1
-    double precision :: efermi,dum
+    double precision              :: efermi,dum
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
 
        open( 77,file=trim(hamfolder)//'/HMLT',form='formatted',status='old',iostat=ios,    &
@@ -101,12 +101,12 @@ contains
 !
     implicit none
     
-    integer :: i, j, ikp, ios, ntet
-    integer, allocatable :: itt(:,:)
+    integer                       :: i, j, ikp, ios, ntet
+    integer, allocatable          :: itt(:,:)
     double precision, parameter   :: Ry2eV = 1.36058d+1
-    double precision :: efermi
+    double precision              :: efermi
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
-    character(len=*)ch
+    character(len=*)              :: ch
 
        open( 77,file=ch,form='formatted',status='old',iostat=ios,    &
              action='read',position='rewind' )
@@ -175,7 +175,7 @@ end subroutine deallocate_ham
 
 SUBROUTINE read_bzindices
       implicit none
-      integer ikp,jkp
+      integer :: ikp,jkp
 
       allocate(imq(nkp),ikpq(nkp,nkp))
 
