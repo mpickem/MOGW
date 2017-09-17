@@ -11,8 +11,8 @@ contains
 subroutine read_vq(iq, vq, filename_vq)
   implicit none
   integer, intent(in)            :: iq
-  ! complex(kind=8), intent(out) :: v(ndim**2,ndim**2)
-  complex(kind=8)                :: vq(ndim,ndim,ndim,ndim)
+  ! complex(dp), intent(out) :: v(ndim**2,ndim**2)
+  complex(dp)                    :: vq(ndim,ndim,ndim,ndim)
   integer(hid_t)                 :: vq_file_id, grp_id, iq_id, iq_space_id
   integer                        :: err, ind, i, j, k, l, i1, i2
   integer(hid_t)                 :: nmembers, imembers, itype
@@ -73,10 +73,10 @@ end subroutine read_vq
 !========================================================================================================
 subroutine read_u(u_tmp, filename_umatrix)
   implicit none
-  real(kind=8)      :: u_tmp(ndim,ndim,ndim,ndim), u_tilde_tmp(ndim,ndim,ndim,ndim)
-  real(kind=8)      :: u_value
-  ! complex(kind=8), intent(out) :: u(ndim**2, ndim**2), u_tilde(ndim**2, ndim**2)
-  ! complex(kind=8), intent(out) :: u_tilde(ndim**2, ndim**2)
+  real(dp)          :: u_tmp(ndim,ndim,ndim,ndim), u_tilde_tmp(ndim,ndim,ndim,ndim)
+  real(dp)          :: u_value
+  ! complex(dp), intent(out) :: u(ndim**2, ndim**2), u_tilde(ndim**2, ndim**2)
+  ! complex(dp), intent(out) :: u_tilde(ndim**2, ndim**2)
   integer           :: n,i,j,k,l,i1,i2
   character(len=80) :: filename_umatrix
 
@@ -113,8 +113,8 @@ end subroutine read_u
 
 !subroutine read_v_r(v_r,r_data)
 !  implicit none
-!  real(kind=8) v_r(:,:,:)!(ndim**2,ndim**2,nr)
-!  real(kind=8) r_data(3,nr),v_r_real(ndim**2,ndim**2)
+!  real(dp) v_r(:,:,:)!(ndim**2,ndim**2,nr)
+!  real(dp) r_data(3,nr),v_r_real(ndim**2,ndim**2)
 !  integer :: nr_file,ir,i,j,nd
 
 !  open(unit=2,file=filename_vr)
@@ -144,12 +144,12 @@ end subroutine read_u
 
 !subroutine get_vq(v,q,v_r,r_data)
 !  implicit none
-!  complex(kind=8),intent(out) :: v(ndim**2,ndim**2)
-!  real(kind=8),intent(in) :: q(3)
-!  real(kind=8) :: v_r(:,:,:),r_data(:,:)
+!  complex(dp),intent(out) :: v(ndim**2,ndim**2)
+!  real(dp),intent(in) :: q(3)
+!  real(dp) :: v_r(:,:,:),r_data(:,:)
 !  integer :: i
 
-!  v=cmplx(0.d0,0.d0,kind=8)
+!  v=cmplx(0.d0,0.d0,dp)
 !  if (nr.eq.0) then
 !    v=u
 !  end if

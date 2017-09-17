@@ -5,7 +5,7 @@ module hamiltonian_module
   integer, public                             :: ndim,nkp,nsham,ntet,idim
   double precision, public                    :: efermi
   double precision, allocatable, public, save :: wtkp(:)
-  complex(kind=8), allocatable, public, save  :: h(:,:,:)
+  complex(dp), allocatable, public, save      :: h(:,:,:)
   double precision, allocatable, public,save  :: bk(:,:)
   integer, allocatable, public                :: ikpq(:,:),imq(:)
 

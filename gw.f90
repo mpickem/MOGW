@@ -12,22 +12,22 @@ program gw
 ! parameters of the calculation
   real(dp)                     :: mu
   integer                      :: L
-  complex(kind=8)              :: ntot
+  complex(dp)                  :: ntot
 
 ! flags
   logical                      :: flagN,flagSE,flagVfile
 
 ! variables (Greensfunctions, interactions, self-energy, ...)
-  complex(kind=8), allocatable :: Giw(:,:,:,:),Gconv(:,:,:)
-  complex(kind=8), allocatable :: ncur(:,:),n_min(:,:),n_max(:,:),n_mid(:,:)
+  complex(dp), allocatable     :: Giw(:,:,:,:),Gconv(:,:,:)
+  complex(dp), allocatable     :: ncur(:,:),n_min(:,:),n_max(:,:),n_mid(:,:)
   real(dp),        allocatable :: Gtau(:,:,:,:)
-  complex(kind=8), allocatable :: P(:,:,:,:)
-  complex(kind=8), allocatable :: V(:,:,:,:),Vend(:,:,:)
-  complex(kind=8), allocatable :: W(:,:,:,:)
-  complex(kind=8), allocatable :: SE_old(:,:,:,:), SE_new(:,:,:,:)
+  complex(dp), allocatable     :: P(:,:,:,:)
+  complex(dp), allocatable     :: V(:,:,:,:),Vend(:,:,:)
+  complex(dp), allocatable     :: W(:,:,:,:)
+  complex(dp), allocatable     :: SE_old(:,:,:,:), SE_new(:,:,:,:)
 
 ! auxiliaries
-  complex(kind=8)              :: n,nmin,nmax,nmid,dif,maxdif
+  complex(dp)                  :: n,nmin,nmax,nmid,dif,maxdif
   real(dp)                     :: mu_min,mu_max,mu_mid,tmp,dummy
   real(dp)                     :: tstart, tend  ! mpi times
   integer                      :: i,j,ikp,iw,cyc

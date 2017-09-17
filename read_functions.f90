@@ -14,16 +14,16 @@ module read_functions
 
 subroutine read_V(V,Vend,flagVfile)
 ! input / output
-  logical, intent(in)          :: flagVfile
-  complex(kind=8), intent(out) :: V(ndim**2,ndim**2,nkp,nw),Vend(ndim**2,ndim**2,nkp)
-  real(dp)                     :: u_tmp(ndim,ndim,ndim,ndim)
-  complex(kind=8)              :: vq(ndim,ndim,ndim,ndim)
+  logical, intent(in)      :: flagVfile
+  complex(dp), intent(out) :: V(ndim**2,ndim**2,nkp,nw),Vend(ndim**2,ndim**2,nkp)
+  real(dp)                 :: u_tmp(ndim,ndim,ndim,ndim)
+  complex(dp)              :: vq(ndim,ndim,ndim,ndim)
 
 ! auxiliaries
-  integer                      :: VL(ndim,ndim), VR(ndim,ndim),iv
-  integer                      :: i,j,k,l,iq,ina,inb, error
-  double precision             :: tmp(ndim,nw),tmp2(ndim)
-  complex(dp)                  :: sumq
+  integer                  :: VL(ndim,ndim), VR(ndim,ndim),iv
+  integer                  :: i,j,k,l,iq,ina,inb, error
+  double precision         :: tmp(ndim,nw),tmp2(ndim)
+  complex(dp)              :: sumq
 
 ! initialization
   V=0.d0

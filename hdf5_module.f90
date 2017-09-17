@@ -1,18 +1,16 @@
 module hdf5_module
-
+  use aux
   use hdf5
   use hamiltonian_module ! for nkp, ndim
-  ! use parameters_module
   implicit none
-  integer :: iwfmax, iwbmax
-
-  integer(hid_t) :: plist_id
-  integer(hid_t) :: dspace_id
-  integer(hid_t) :: compound_id, type_r_id, type_i_id
-  integer(size_t) :: compound_size, type_sized
+  integer                        :: iwfmax, iwbmax
+  integer(hid_t)                 :: plist_id
+  integer(hid_t)                 :: dspace_id
+  integer(hid_t)                 :: compound_id, type_r_id, type_i_id
+  integer(size_t)                :: compound_size, type_sized
   integer(hsize_t), dimension(2) :: dims
-  double precision, allocatable :: tmp_r_1(:,:), tmp_i_1(:,:), tmp_err_1(:,:)
-  integer :: err
+  real(dp), allocatable          :: tmp_r_1(:,:), tmp_i_1(:,:), tmp_err_1(:,:)
+  integer                        :: err
 
  contains
 
@@ -43,7 +41,7 @@ module hdf5_module
 
 !=====================================================================================
    subroutine read_axes(file_id, iwb_array, iwf_array, dspace_iwb_id, dspace_iwf_id, dim_iwb, dim_iwf)
-     double precision, allocatable :: iwb_array(:),iwf_array(:)
+     real(dp), allocatable :: iwb_array(:),iwf_array(:)
      integer(hsize_t), dimension(1), intent(out) :: dim_iwb, dim_iwf
      integer(hsize_t), dimension(1) :: dim_iwf_max, dim_iwb_max
      integer :: err
@@ -73,12 +71,12 @@ module hdf5_module
 
 
    subroutine write_axes(file_id, iwb_array, iwf_array, dspace_iwb_id, dspace_iwf_id, dim_iwb, dim_iwf)
-     integer(hid_t) :: file_id
-     double precision, intent(in):: iwb_array(-iwbmax:iwbmax), iwf_array(-iwfmax:iwfmax-1)
+     integer(hid_t)                :: file_id
+     real(dp), intent(in)          :: iwb_array(-iwbmax:iwbmax), iwf_array(-iwfmax:iwfmax-1)
      integer(hsize_t),dimension(1) :: dim_iwb, dim_iwf
-     integer :: err
-     integer(hid_t) :: axes_id, iwb_id, iwf_id
-     integer(hid_t), intent(in) :: dspace_iwb_id, dspace_iwf_id
+     integer                       :: err
+     integer(hid_t)                :: axes_id, iwb_id, iwf_id
+     integer(hid_t), intent(in)    :: dspace_iwb_id, dspace_iwf_id
 
      !write Matsubara frequency axes:
      call h5gcreate_f(file_id, ".axes", axes_id, err)
@@ -99,10 +97,10 @@ module hdf5_module
    subroutine create_channels(file_id)
      implicit none
 
-     integer :: iwb,err
-     integer(hid_t) :: grp_dens_id,grp_magn_id,iw_magn_id,iw_dens_id
+     integer           :: iwb,err
+     integer(hid_t)    :: grp_dens_id,grp_magn_id,iw_magn_id,iw_dens_id
      character(len=20) :: name_buffer
-     integer(hid_t) :: file_id
+     integer(hid_t)    :: file_id
      
      !create dens and magn groups:
      call h5gcreate_f(file_id, "dens", grp_dens_id, err)
@@ -131,9 +129,9 @@ module hdf5_module
 
       integer, intent(in) :: ichannel !1=magn, 2=dens
       integer, intent(in) :: iwb, ind_orb
-      character(len=20) :: grpname
-      integer(hid_t) :: grp_id, dset_id, dset_err_id
-      integer(hid_t) :: file_id
+      character(len=20)   :: grpname
+      integer(hid_t)      :: grp_id, dset_id, dset_err_id
+      integer(hid_t)      :: file_id
 
       if (ichannel==1) then
          write(grpname, '("magn/",I5.5,"/",i5.5)') iwb, ind_orb
@@ -164,12 +162,12 @@ module hdf5_module
    subroutine add_to_component(file_id, ichannel, iwb, ind_orb, g4iw_r, g4iw_i, g4err)
      implicit none
      integer, intent(in) :: ichannel, iwb, ind_orb
-     double precision,intent(in) :: g4iw_r(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
-     double precision,intent(in) :: g4iw_i(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
-     double precision,intent(in) :: g4err(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
-     character(len=20) :: grpname
-     integer(hid_t) :: grp_id, dset_id, dset_err_id
-     integer(hid_t) :: file_id
+     real(dp),intent(in) :: g4iw_r(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
+     real(dp),intent(in) :: g4iw_i(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
+     real(dp),intent(in) :: g4err(2*iwfmax, 2*iwfmax, 2*iwbmax+1)
+     character(len=20)   :: grpname
+     integer(hid_t)      :: grp_id, dset_id, dset_err_id
+     integer(hid_t)      :: file_id
 
      if (ichannel==1) then
         write(grpname, '(A5,(I5.5),A1,(I5.5))') "magn/", iwb, "/", ind_orb

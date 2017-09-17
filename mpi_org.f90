@@ -1,15 +1,15 @@
 module mpi_org
-
+  use aux
 #ifdef MPI
   use mpi!_f08 ! latest MPI Standard -- use with latest mpi and intel compiler
 #endif
 
-integer                      :: nproc, myid, master, mpierr
-integer                      :: ikstart, ikend, nkthis, ncount
-integer, allocatable         :: displs(:),rcounts(:)
-character(len=80)            :: chmyid
-complex(kind=8), allocatable :: mpi_cwork(:), mpi_cwork3(:,:,:)
-complex(kind=8), allocatable :: sndbuf(:)
+integer                  :: nproc, myid, master, mpierr
+integer                  :: ikstart, ikend, nkthis, ncount
+integer, allocatable     :: displs(:),rcounts(:)
+character(len=80)        :: chmyid
+complex(dp), allocatable :: mpi_cwork(:), mpi_cwork3(:,:,:)
+complex(dp), allocatable :: sndbuf(:)
 
 contains
 

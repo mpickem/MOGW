@@ -1,4 +1,5 @@
 module lapack_module
+  use aux
   implicit none
   private
   public inverse_matrix
@@ -11,11 +12,11 @@ module lapack_module
   
   subroutine inverse_matrix_z(M)
     implicit none
-    double complex, intent (inout) :: M(:,:)
-    integer                        :: ndim,ierr,lwork
-    integer,        allocatable    :: ipiv(:)
-    double complex, allocatable    :: work(:)
-    double complex                 :: work_query(1)
+    complex(dp), intent(inout) :: M(:,:)
+    integer                    :: ndim,ierr,lwork
+    integer, allocatable       :: ipiv(:)
+    complex(dp), allocatable   :: work(:)
+    complex(dp)                :: work_query(1)
   
     ndim = size(M,1)
     allocate(ipiv(ndim))
@@ -38,11 +39,11 @@ module lapack_module
   
   subroutine inverse_matrix_d(M)
     implicit none
-    double precision, intent (inout) :: M(:,:)
-    integer                          :: ndim,ierr,lwork
-    integer,          allocatable    :: ipiv(:)
-    double precision, allocatable    :: work(:)
-    double precision                 :: work_query(1)
+    real(dp), intent (inout) :: M(:,:)
+    integer                  :: ndim,ierr,lwork
+    integer, allocatable     :: ipiv(:)
+    real(dp), allocatable    :: work(:)
+    real(dp)                 :: work_query(1)
   
     ndim = size(M,1)
     allocate(ipiv(ndim))

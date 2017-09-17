@@ -13,13 +13,13 @@ contains
 
 subroutine compute_Giw(mu,Giw,SE)
 ! input/output
-  real(dp), intent(in)           :: mu
-  complex(kind=8), intent(out)   :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(inout) :: SE(ndim,ndim,nkp,2*nw)  !inout because of Continuation
+  real(dp), intent(in)       :: mu
+  complex(dp), intent(out)   :: Giw(ndim,ndim,nkp,2*nw)
+  complex(dp), intent(inout) :: SE(ndim,ndim,nkp,2*nw)  !inout because of Continuation
 
 ! auxiliaries
-  integer                        :: ikp,iw,i,j,ina,inb
-  complex(kind=8), allocatable   :: cmat(:,:)
+  integer                    :: ikp,iw,i,j,ina,inb
+  complex(dp), allocatable   :: cmat(:,:)
 
 ! initialization
   Giw = 0.d0
@@ -106,12 +106,12 @@ end subroutine compute_Giw
 
 subroutine compute_Gconv(mu,Gconv)
 ! input/output
-  real(dp), intent(in)         :: mu
-  complex(kind=8), intent(out) :: Gconv(ndim,nkp,2*nw)
+  real(dp), intent(in)     :: mu
+  complex(dp), intent(out) :: Gconv(ndim,nkp,2*nw)
 
 ! auxiliaries
-  integer                      :: ikp,iw,i,ina
-  complex(kind=8), allocatable :: cmat(:)
+  integer                  :: ikp,iw,i,ina
+  complex(dp), allocatable :: cmat(:)
 
 ! compute Gtilde_ii(k,iw) = [ iw + mu - real(H(k))]^{-1}
   allocate(cmat(ndim))
@@ -148,15 +148,15 @@ end subroutine compute_Gconv
 
 subroutine compute_P(mu,Giw,Gconv,P)
 !input/output
-  real(dp), intent(in)         :: mu
-  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(in)  :: Gconv(ndim,nkp,2*nw)
-  complex(kind=8), intent(out) :: P(ndim**2,ndim**2,nkp,nw)
+  real(dp), intent(in)     :: mu
+  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
+  complex(dp), intent(in)  :: Gconv(ndim,nkp,2*nw)
+  complex(dp), intent(out) :: P(ndim**2,ndim**2,nkp,nw)
 
 !auxiliaries
-  integer                      :: iv,ikq,iw,ikp,i,j,k,l,ina,inb
-  complex(kind=8)              :: G1,G2,ctmp
-  integer                      :: IL(ndim,ndim),IR(ndim,ndim)
+  integer                  :: iv,ikq,iw,ikp,i,j,k,l,ina,inb
+  complex(dp)              :: G1,G2,ctmp
+  integer                  :: IL(ndim,ndim),IR(ndim,ndim)
 
 !initialization
   P = 0.d0
@@ -324,63 +324,63 @@ end subroutine compute_P
 
 !##########################################
 
-subroutine Giw2Gtau(L,Giw,Gtau)
-! input/output
-  integer, intent(in)          :: L
-  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,nw)
-  real(dp), intent(out)        :: Gtau(ndim,ndim,nkp,nw)
+! subroutine Giw2Gtau(L,Giw,Gtau)
+! ! input/output
+!   integer, intent(in)          :: L
+!   complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,nw)
+!   real(dp), intent(out)        :: Gtau(ndim,ndim,nkp,nw)
 
-! auxiliaries
-  integer                      :: ikp,ina,inb
-  complex(kind=8), allocatable :: mat(:,:)
+! ! auxiliaries
+!   integer                      :: ikp,ina,inb
+!   complex(dp), allocatable :: mat(:,:)
 
-  Gtau = 0.d0 ! initialization
+!   Gtau = 0.d0 ! initialization
 
-  write(*,*) 'FT G(iw) --> G(tau)'
-! the following should be a subroutine: "call Giw2Gtau()"
-  do ikp=1,nkp ! loop over k-points
-    do ina=1,ndim
-      ! diagonal elements of G:
-      call invfourierhp(beta,L,nw,Giw(ina,ina,ikp,:),Gtau(ina,ina,ikp,:),0.d0) ! high precision version...
-      ! the FT routines are in four.f90
-      do inb=ina+1,ndim
-         ! off-diagonal elements of G:
-         call invfourier(beta,L,nw,1,1,Giw(ina,inb,ikp,:),Gtau(ina,inb,ikp,:))
-         call invfourier(beta,L,nw,1,1,Giw(inb,ina,ikp,:),Gtau(inb,ina,ikp,:))
-         ! The second call (that for (inb,ina) ) can be avoided by exploiting the symmetry of G:
-         ! Giw(ina,inb)=Giw^*(inb,ina)  --> Gtau(ina,inb,tau)=Gtau(inb,ina, -tau ) = -Gtau(inb,ina,beta-tau) ... I think ... to be checked:
-         !Gtau(inb,ina,ikp,1) = Gtau(ina,inb,ikp,1) ! because there is not jump in offdiag G...
-         !do iL=2,L
-         !   Gtau(inb,ina,ikp,iL)= - Gtau(ina,inb,ikp,L+2-iL)
-         !enddo
-       enddo
-    enddo
-  enddo ! ikp
-! output of local part of Gloc to file
-  write(*,*) 'output of G0loc(tau) to file Gt.dat'
-! We have information about Gtau for tau in [0,beta)
-! In order to have G(tau=beta) we can exploit properties of G:
-! - diagonal elements jump by 1 (antiperiodic!)
-! - offdiagonal elements are continous (no jump)
-  allocate(mat(ndim,ndim))
-  mat=0.d0
-  do ina=1,ndim
-     mat(ina,ina)=1.d0
-  enddo
-  call local_output_tau(Gtau,ndim,L,1,mat,trim(outfolder)//"//Gt.dat")
-  deallocate(mat)
+!   write(*,*) 'FT G(iw) --> G(tau)'
+! ! the following should be a subroutine: "call Giw2Gtau()"
+!   do ikp=1,nkp ! loop over k-points
+!     do ina=1,ndim
+!       ! diagonal elements of G:
+!       call invfourierhp(beta,L,nw,Giw(ina,ina,ikp,:),Gtau(ina,ina,ikp,:),0.d0) ! high precision version...
+!       ! the FT routines are in four.f90
+!       do inb=ina+1,ndim
+!          ! off-diagonal elements of G:
+!          call invfourier(beta,L,nw,1,1,Giw(ina,inb,ikp,:),Gtau(ina,inb,ikp,:))
+!          call invfourier(beta,L,nw,1,1,Giw(inb,ina,ikp,:),Gtau(inb,ina,ikp,:))
+!          ! The second call (that for (inb,ina) ) can be avoided by exploiting the symmetry of G:
+!          ! Giw(ina,inb)=Giw^*(inb,ina)  --> Gtau(ina,inb,tau)=Gtau(inb,ina, -tau ) = -Gtau(inb,ina,beta-tau) ... I think ... to be checked:
+!          !Gtau(inb,ina,ikp,1) = Gtau(ina,inb,ikp,1) ! because there is not jump in offdiag G...
+!          !do iL=2,L
+!          !   Gtau(inb,ina,ikp,iL)= - Gtau(ina,inb,ikp,L+2-iL)
+!          !enddo
+!        enddo
+!     enddo
+!   enddo ! ikp
+! ! output of local part of Gloc to file
+!   write(*,*) 'output of G0loc(tau) to file Gt.dat'
+! ! We have information about Gtau for tau in [0,beta)
+! ! In order to have G(tau=beta) we can exploit properties of G:
+! ! - diagonal elements jump by 1 (antiperiodic!)
+! ! - offdiagonal elements are continous (no jump)
+!   allocate(mat(ndim,ndim))
+!   mat=0.d0
+!   do ina=1,ndim
+!      mat(ina,ina)=1.d0
+!   enddo
+!   call local_output_tau(Gtau,ndim,L,1,mat,trim(outfolder)//"//Gt.dat")
+!   deallocate(mat)
 
-  return
-end subroutine Giw2Gtau
+!   return
+! end subroutine Giw2Gtau
 
 subroutine compute_W(P,V,W)
 ! input/output
-  complex(kind=8), intent(in)  :: P(ndim**2,ndim**2,nkp,nw),V(ndim**2,ndim**2,nkp,nw)
-  complex(kind=8), intent(out) :: W(ndim**2,ndim**2,nkp,nw)
+  complex(dp), intent(in)  :: P(ndim**2,ndim**2,nkp,nw),V(ndim**2,ndim**2,nkp,nw)
+  complex(dp), intent(out) :: W(ndim**2,ndim**2,nkp,nw)
 
 ! auxiliaries
-  integer                      :: iv,ikq,i,ina,inb
-  complex(kind=8), allocatable :: dmat(:,:)
+  integer                  :: iv,ikq,i,ina,inb
+  complex(dp), allocatable :: dmat(:,:)
 
  ! initialization
   W = 0.d0
@@ -432,16 +432,16 @@ end subroutine compute_W
 
 subroutine compute_SE(Giw,W,Vend,SE)
 ! input/output
-  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(in)  :: Vend(ndim**2,ndim**2,nkp)
-  complex(kind=8), intent(in)  :: W(ndim**2,ndim**2,nkp,nw)
-  complex(kind=8), intent(out) :: SE(ndim,ndim,nkp,2*nw)
+  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
+  complex(dp), intent(in)  :: Vend(ndim**2,ndim**2,nkp)
+  complex(dp), intent(in)  :: W(ndim**2,ndim**2,nkp,nw)
+  complex(dp), intent(out) :: SE(ndim,ndim,nkp,2*nw)
 
 ! auxiliaries
-  integer                      :: iw,ikp,iv,ikq,i,j,k,l,ina,inb
-  complex(kind=8)              :: tmpW(ndim,ndim,ndim,ndim,nkp,nw)
-  complex(kind=8)              :: tmpVend(ndim,ndim,ndim,ndim,nkp)
-  complex(kind=8)              :: FT(ndim,ndim,nkp,2*nw),ST(ndim,ndim,nkp,2*nw)
+  integer                  :: iw,ikp,iv,ikq,i,j,k,l,ina,inb
+  complex(dp)              :: tmpW(ndim,ndim,ndim,ndim,nkp,nw)
+  complex(dp)              :: tmpVend(ndim,ndim,ndim,ndim,nkp)
+  complex(dp)              :: FT(ndim,ndim,nkp,2*nw),ST(ndim,ndim,nkp,2*nw)
 ! initialization
 
   SE = 0.d0
@@ -610,9 +610,9 @@ end subroutine compute_SE
 
 subroutine compute_n(ncur,trace,Giw)
 ! input/output
-  complex(kind=8), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(kind=8), intent(out) :: ncur(ndim,ndim)
-  complex(kind=8), intent(out) :: trace
+  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
+  complex(dp), intent(out) :: ncur(ndim,ndim)
+  complex(dp), intent(out) :: trace
 
 ! auxiliaries
   integer                      :: iw,ikp,i,j
