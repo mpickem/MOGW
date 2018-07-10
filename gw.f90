@@ -111,11 +111,11 @@ program gw
 ! setting up variables for first runthrough
 
   ! for first runthrough -> GDMFT(ik)
-  ! call read_DMFT_SE(SE_new,mu,filename_dmft)
-  ! if(myid.eq.master) write(*,*) 'mu DMFT: ', mu
+  call read_DMFT_SE(SE_new,mu,filename_dmft)
+  if(myid.eq.master) write(*,*) 'mu DMFT: ', mu
 
   ! for first runthrough -> G0(ik)
-  SE_new = 0.d0
+  ! SE_new = 0.d0
 
   cyc=0     ! counting cycles
 

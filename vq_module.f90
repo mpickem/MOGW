@@ -34,7 +34,7 @@ subroutine read_vq(iq, vq, filename_vq)
   vq = 0.d0
 
   call h5gn_members_f(vq_file_id, "/", nmembers, err)
-  do imembers = 1,nmembers - 1
+  do imembers = 2,nmembers - 1 ! .axes .config 00001 ...
      call h5gget_obj_info_idx_f(vq_file_id, "/", imembers, name_buffer, itype, err)
 
      read(name_buffer,'(I5.5)') ind
