@@ -1,5 +1,5 @@
-module lapack_module
-  use aux
+module Mlapack
+  use Mglobal
   implicit none
   private
   public inverse_matrix
@@ -64,4 +64,4 @@ module lapack_module
     deallocate(ipiv,work)
   end subroutine inverse_matrix_d
   
-end module lapack_module
+end module Mlapack

@@ -1,21 +1,14 @@
-module computation_functions
-  use aux
-  use index_reference
-  use hamiltonian_module
-  use lapack_module
-  use mpi_org
-  implicit none
-  character(len=80) :: filen
-  private           :: filen
-  public            :: compute_Giw, compute_Gconv, compute_P, compute_W, compute_n
+module Mcomp
+  use Mglobal
+  use Mindex
+  use Mhamil
+  use Mlapack
 
 contains
 
-subroutine compute_Giw(mu,Giw,SE)
+subroutine compute_Giw(mu_loc) 
 ! input/output
-  real(dp), intent(in)       :: mu
-  complex(dp), intent(out)   :: Giw(ndim,ndim,nkp,2*nw)
-  complex(dp), intent(inout) :: SE(ndim,ndim,nkp,2*nw)  !inout because of Continuation
+  real(dp), intent(in)       :: mu_loc
 
 ! auxiliaries
   integer                    :: ikp,iw,i,j,ina,inb
@@ -34,7 +27,7 @@ subroutine compute_Giw(mu,Giw,SE)
     do ikp=ikstart,ikend !1,nkp ! k-points
       cmat=0.d0
       do i=1,ndim ! orbitals
-         cmat(i,i) = ci * real(2*(iw-1)+1,kind=8)*pi/beta + mu
+         cmat(i,i) = ci * real(2*(iw-1)+1,kind=8)*pi/beta + mu_loc
       enddo
       ! iw + mu - H(k) - SE :
       cmat(:,:)=cmat(:,:)-h(:,:,ikp)-SE(:,:,ikp,iw)
@@ -45,70 +38,10 @@ subroutine compute_Giw(mu,Giw,SE)
   enddo !iw
   deallocate(cmat)
 
-! parallelization - communication
-#ifdef MPI
-  allocate(mpi_cwork(nkp))
-  do i=1,2*nw
-    do inb=1,ndim
-      do ina=1,ndim
-        call MPI_ALLGATHERV(Giw(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
-        ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
-        Giw(ina,inb,:,i)=mpi_cwork(:)
-      enddo
-    enddo
-  enddo
-  deallocate(mpi_cwork)
-#endif
-
-! output - should go into io.f90
-  if(myid.eq.master) then
-    filen=trim(outfolder)//"/Gw.dat"
-    call local_output_Matsub(Giw,1,filen) ! this routine is in io.f90
-    filen=trim(outfolder)//"/Gw_diag.dat"
-    call local_output_Matsub_diagonal(Giw,1,filen) ! this routine is in io.f90
-
-! output - should go into io.f90
-
-    filen=trim(outfolder)//"/Gkw.dat"
-    open(unit=10,file=filen)
-      write(10,*) "## ikp, iw, iomega, RE[G_ii(ikp,iw)], IM(G_ii(ikp,iw)]"
-      write(10,*) "##"
-      do ikp=1,nkp
-      do iw=1, min(250,nw)
-        write(10,'(I7,I7,F20.8)',advance='no') ikp,iw,pi/beta*real(2*(iw-1)+1,kind=8)
-        do i=1,ndim
-          write(10,'(E23.8)',advance='no') real(Giw(i,i,ikp,iw))
-          write(10,'(E23.8)',advance='no') aimag(Giw(i,i,ikp,iw))
-        enddo
-        write(10,*) ! line break
-      enddo
-      enddo
-    close(10)
-
-    filen=trim(outfolder)//"/Hk.dat"
-    open(unit=11,file=filen)
-      write(11,*) "## ikp, RE[H_ii(ikp)], IM(H_ii(ikp)]"
-      write(11,*) "##"
-      do ikp=1,nkp
-        write(11,'(I7)',advance='no') ikp
-        do i=1,ndim
-          write(11,'(E23.8)',advance='no') real(h(i,i,ikp))
-          write(11,'(E23.8)',advance='no') aimag(h(i,i,ikp))
-        enddo
-        write(11,*) ! line break
-      enddo
-    close(11)
-
-  endif ! master
-
   return
 end subroutine compute_Giw
 
-subroutine compute_Gconv(mu,Gconv)
-! input/output
-  real(dp), intent(in)     :: mu
-  complex(dp), intent(out) :: Gconv(ndim,nkp,2*nw)
-
+subroutine compute_Gconv
 ! auxiliaries
   integer                  :: ikp,iw,i,ina
   complex(dp), allocatable :: cmat(:)
@@ -128,31 +61,12 @@ subroutine compute_Gconv(mu,Gconv)
   enddo !iw
   deallocate(cmat)
 
-#ifdef MPI
-! parallelization - communication
-  allocate(mpi_cwork(nkp))
-  do i=1,2*nw
-    do ina=1,ndim
-      call MPI_ALLGATHERV(Gconv(ina,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
-      ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
-      Gconv(ina,:,i)=mpi_cwork(:)
-    enddo
-  enddo
-  deallocate(mpi_cwork)
-#endif
-
   return
 end subroutine compute_Gconv
 
 !########################################
 
-subroutine compute_P(mu,Giw,Gconv,P)
-!input/output
-  real(dp), intent(in)     :: mu
-  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(dp), intent(in)  :: Gconv(ndim,nkp,2*nw)
-  complex(dp), intent(out) :: P(ndim**2,ndim**2,nkp,nw)
-
+subroutine compute_P
 !auxiliaries
   integer                  :: iv,ikq,iw,ikp,i,j,k,l,ina,inb
   complex(dp)              :: G1,G2,ctmp
@@ -166,8 +80,6 @@ subroutine compute_P(mu,Giw,Gconv,P)
 
 !compound indizes
   call index_(IL,IR)
-
-  if(myid.eq.master) write(*,*) 'Computing P(q,iv)'
 
 !multiorbital calculation
 !compute P_ilkj(ikq,iv) = 2 / beta * G_ij(ikp,iw)* G_kl(ikp+ikq,iw+iv)
@@ -297,87 +209,10 @@ subroutine compute_P(mu,Giw,Gconv,P)
   enddo
   enddo
 
-#ifdef MPI
-! parallelization - communication
-  allocate(mpi_cwork(nkp))
-  do i=1,nw
-    do ina=1,ndim**2
-      do inb=1,ndim**2
-        call MPI_ALLGATHERV(P(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
-        ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
-        P(ina,inb,:,i)=mpi_cwork(:)
-      enddo
-    enddo
-  enddo
-  deallocate(mpi_cwork)
-#endif
-
-  if(myid.eq.master) then
-    filen=trim(outfolder)//"/Pv.dat"
-    write(*,*) 'output of Ploc(iv) to file Pv.dat'
-    call local_output_Compound(P,0,filen) ! 0 ... bosonic
-  endif
-! bosonic frequencies because iv=1 is equivalent to no shift etc.
-
   return
 end subroutine compute_P
 
-!##########################################
-
-! subroutine Giw2Gtau(L,Giw,Gtau)
-! ! input/output
-!   integer, intent(in)          :: L
-!   complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,nw)
-!   real(dp), intent(out)        :: Gtau(ndim,ndim,nkp,nw)
-
-! ! auxiliaries
-!   integer                      :: ikp,ina,inb
-!   complex(dp), allocatable :: mat(:,:)
-
-!   Gtau = 0.d0 ! initialization
-
-!   write(*,*) 'FT G(iw) --> G(tau)'
-! ! the following should be a subroutine: "call Giw2Gtau()"
-!   do ikp=1,nkp ! loop over k-points
-!     do ina=1,ndim
-!       ! diagonal elements of G:
-!       call invfourierhp(beta,L,nw,Giw(ina,ina,ikp,:),Gtau(ina,ina,ikp,:),0.d0) ! high precision version...
-!       ! the FT routines are in four.f90
-!       do inb=ina+1,ndim
-!          ! off-diagonal elements of G:
-!          call invfourier(beta,L,nw,1,1,Giw(ina,inb,ikp,:),Gtau(ina,inb,ikp,:))
-!          call invfourier(beta,L,nw,1,1,Giw(inb,ina,ikp,:),Gtau(inb,ina,ikp,:))
-!          ! The second call (that for (inb,ina) ) can be avoided by exploiting the symmetry of G:
-!          ! Giw(ina,inb)=Giw^*(inb,ina)  --> Gtau(ina,inb,tau)=Gtau(inb,ina, -tau ) = -Gtau(inb,ina,beta-tau) ... I think ... to be checked:
-!          !Gtau(inb,ina,ikp,1) = Gtau(ina,inb,ikp,1) ! because there is not jump in offdiag G...
-!          !do iL=2,L
-!          !   Gtau(inb,ina,ikp,iL)= - Gtau(ina,inb,ikp,L+2-iL)
-!          !enddo
-!        enddo
-!     enddo
-!   enddo ! ikp
-! ! output of local part of Gloc to file
-!   write(*,*) 'output of G0loc(tau) to file Gt.dat'
-! ! We have information about Gtau for tau in [0,beta)
-! ! In order to have G(tau=beta) we can exploit properties of G:
-! ! - diagonal elements jump by 1 (antiperiodic!)
-! ! - offdiagonal elements are continous (no jump)
-!   allocate(mat(ndim,ndim))
-!   mat=0.d0
-!   do ina=1,ndim
-!      mat(ina,ina)=1.d0
-!   enddo
-!   call local_output_tau(Gtau,ndim,L,1,mat,trim(outfolder)//"//Gt.dat")
-!   deallocate(mat)
-
-!   return
-! end subroutine Giw2Gtau
-
-subroutine compute_W(P,V,W)
-! input/output
-  complex(dp), intent(in)  :: P(ndim**2,ndim**2,nkp,nw),V(ndim**2,ndim**2,nkp,nw)
-  complex(dp), intent(out) :: W(ndim**2,ndim**2,nkp,nw)
-
+subroutine compute_W
 ! auxiliaries
   integer                  :: iv,ikq,i,ina,inb
   complex(dp), allocatable :: dmat(:,:)
@@ -386,8 +221,6 @@ subroutine compute_W(P,V,W)
   W = 0.d0
 
   allocate(dmat(ndim**2,ndim**2))
-  if(myid.eq.master) write(*,*) 'Computing W(q,iv)'
-
 
   do iv=1,nw
   do ikq=ikstart,ikend ! 1,nkp
@@ -404,39 +237,12 @@ subroutine compute_W(P,V,W)
 
   deallocate(dmat)
 
-#ifdef MPI
-! parallelization - communication
-  allocate(mpi_cwork(nkp))
-  do i=1,nw
-    do inb=1,ndim**2
-      do ina=1,ndim**2
-        call MPI_ALLGATHERV(W(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
-        ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
-        W(ina,inb,:,i)=mpi_cwork(:)
-      enddo
-    enddo
-  enddo
-  deallocate(mpi_cwork)
-#endif
-
-  if(myid.eq.master) then
-    filen=trim(outfolder)//"/Wv.dat"
-    write(*,*) 'output of Wloc(iv) to file Wv.dat'
-    call local_output_Compound(W,0,filen)
-  endif
-
   return
 end subroutine compute_W
 
 !##########################################
 
-subroutine compute_SE(Giw,W,Vend,SE)
-! input/output
-  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(dp), intent(in)  :: Vend(ndim**2,ndim**2,nkp)
-  complex(dp), intent(in)  :: W(ndim**2,ndim**2,nkp,nw)
-  complex(dp), intent(out) :: SE(ndim,ndim,nkp,2*nw)
-
+subroutine compute_SE
 ! auxiliaries
   integer                  :: iw,ikp,iv,ikq,i,j,k,l,ina,inb
   complex(dp)              :: tmpW(ndim,ndim,ndim,ndim,nkp,nw)
@@ -447,8 +253,6 @@ subroutine compute_SE(Giw,W,Vend,SE)
   SE = 0.d0
   FT = 0.d0
   ST = 0.d0
-
-  if(myid.eq.master) write(*,*) 'Computing SE(k,iw)'
 
 ! index -return ---   W_ij -> W_abcd // V_ij -> V_abcd
 
@@ -569,58 +373,22 @@ subroutine compute_SE(Giw,W,Vend,SE)
 
   SE = FT + ST
 
-#ifdef MPI
- allocate(mpi_cwork(nkp))
-  do i=1,nw
-    do inb=1,ndim
-      do ina=1,ndim
-        call MPI_ALLGATHERV(SE(ina,inb,ikstart:ikend,i),ncount, MPI_DOUBLE_COMPLEX ,mpi_cwork(:),rcounts(1:nproc), displs(1:nproc),MPI_DOUBLE_COMPLEX , MPI_COMM_WORLD ,mpierr)
-        ! call MPI_BARRIER( MPI_COMM_WORLD, mpierr )
-        SE(ina,inb,:,i)=mpi_cwork(:)
-      enddo
-    enddo
-  enddo
-  deallocate(mpi_cwork)
-#endif
-
-  !this also works if compiled without MPI flag (-DMPI)
-  if(myid.eq.master) then
-    write(*,*) 'output of Sloc(iw) to file Sw.dat'
-    filen=trim(outfolder)//"/Sw.dat"
-    call local_output_Matsub(SE,1,filen) ! this routine is in io.f90
-    filen=trim(outfolder)//"/Sw_diag.dat"
-    call local_output_Matsub_diagonal(SE,1,filen) ! this routine is in io.f90
-    filen=trim(outfolder)//"/Skw.dat"
-    open(unit=10,file=filen)
-      write(10,*) "## ikp, kx, ky, kz, iw, iomega, RE[S_ij(ikp,iw)], IM(S_ij(ikp,iw)]"
-      write(10,*) "##"
-      do ikp=1,nkp
-      do iw=1,min(250,nw)
-        write(10,'(I7,3F20.8,I7,F20.8)',advance='no') ikp, bk(1,ikp), bk(2,ikp), bk(3,ikp) ,iw,pi/beta*real(2*(iw-1)+1,kind=8)
-        write(10,'(20E23.8)',advance='yes') ((real(SE(i,j,ikp,iw)), aimag(SE(i,j,ikp,iw)), j=1,ndim),i=1,ndim)
-      enddo
-      enddo
-    close(10)
-  endif ! master
-
   return
 end subroutine compute_SE
 
 !##########################################
 
-subroutine compute_n(ncur,trace,Giw)
+subroutine compute_n(ncur, trace, ndim_loc)
 ! input/output
-  complex(dp), intent(in)  :: Giw(ndim,ndim,nkp,2*nw)
-  complex(dp), intent(out) :: ncur(ndim,ndim)
-  complex(dp), intent(out) :: trace
+  integer, intent(in) :: ndim_loc
+  complex(dp), intent(inout) :: ncur(ndim_loc,ndim_loc)
+  complex(dp), intent(inout) :: trace
 
 ! auxiliaries
   integer                      :: iw,ikp,i,j
-
 ! initialization
   ncur=0.d0
 
-!  write(*,*) 'Computing ncur'
   do iw=1,nw
   do ikp=1,nkp
     do i=1,ndim
@@ -642,10 +410,7 @@ subroutine compute_n(ncur,trace,Giw)
     trace=trace+ncur(i,i)
   enddo
 
-!  write(*,*) 'number of bands', ndim
-!  write(*,'(A,E15.7,E15.7)') ' number of current particles', trace
-
   return
 end subroutine compute_n
 
-end module computation_functions
+end module Mcomp

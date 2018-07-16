@@ -1,22 +1,18 @@
-module hamiltonian_module
-  use aux
+module Mhamil
+  use Mglobal
   implicit none
-  private
-  integer, public                             :: ndim,nkp,nsham,ntet,idim
-  double precision, public                    :: efermi
-  double precision, allocatable, public, save :: wtkp(:)
-  complex(dp), allocatable, public, save      :: h(:,:,:)
-  double precision, allocatable, public,save  :: bk(:,:)
-  integer, allocatable, public                :: ikpq(:,:),imq(:)
 
-  public read_hamiltonian
-  public read_hamiltonian_n
-  public deallocate_ham 
-  public read_bzindices
-  
+  integer                       :: nsham,ntet
+  double precision              :: efermi
+  double precision, allocatable :: wtkp(:)
+  complex(dp), allocatable      :: h(:,:,:)
+  double precision, allocatable :: bk(:,:)
+  integer, allocatable          :: ikpq(:,:),imq(:)
+
 contains
   
   subroutine read_hamiltonian
+!   fills wtkp, h, bk
 !
 !   Reads hamiltonian form disk file 
 !
@@ -25,10 +21,10 @@ contains
     integer                       :: i, j, ikp, ios, ntet
     integer, allocatable          :: itt(:,:)
     double precision, parameter   :: Ry2eV = 1.36058d+1
-    double precision              :: efermi,dum
+    double precision              :: dum
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
 
-       open( 77,file=trim(hamfolder)//'/HMLT',form='formatted',status='old',iostat=ios,    &
+       open( 77,file=file_hmlt,form='formatted',status='old',iostat=ios,    &
              action='read',position='rewind' )
        if( ios /= 0 )then
          write(6,*)
@@ -106,7 +102,7 @@ contains
     double precision, parameter   :: Ry2eV = 1.36058d+1
     double precision              :: efermi
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
-    character(len=*)              :: ch
+    character(len=*), intent(in)  :: ch
 
        open( 77,file=ch,form='formatted',status='old',iostat=ios,    &
              action='read',position='rewind' )
@@ -174,13 +170,14 @@ end subroutine deallocate_ham
 
 
 SUBROUTINE read_bzindices
+      ! fills imq, ikpq
       implicit none
       integer :: ikp,jkp
 
       allocate(imq(nkp),ikpq(nkp,nkp))
 
       ikpq=0
-      open(11,file=trim(hamfolder)//'/HMLT.index.kpq',status='unknown',form='unformatted')
+      open(11,file=file_hmlt_kpq,status='unknown',form='unformatted')
       do ikp=1,nkp
          read(11)(ikpq(ikp,jkp),jkp=ikp,nkp)
   do jkp=1,ikp-1
@@ -189,7 +186,7 @@ SUBROUTINE read_bzindices
       enddo
       close(11)
 
-      open(11,file=trim(hamfolder)//'/HMLT.index.mq',status='unknown',form='unformatted')
+      open(11,file=file_hmlt_mq,status='unknown',form='unformatted')
       read(11)(imq(ikp),ikp=1,nkp)
       close(11)
 
@@ -197,4 +194,4 @@ return
 end SUBROUTINE read_bzindices
 
 
-end module hamiltonian_module
+end module Mhamil

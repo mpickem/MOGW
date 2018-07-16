@@ -1,6 +1,5 @@
-module index_reference
-  use aux
-  use hamiltonian_module, only : ndim
+module Mindex
+  use Mglobal
   implicit none
   private
   public :: index_, inverse_l, inverse_r
@@ -36,4 +35,4 @@ module index_reference
     return
   end function inverse_r
 
-end module index_reference
+end module Mindex
