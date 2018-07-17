@@ -6,7 +6,7 @@ module Mcomp
 
 contains
 
-subroutine compute_Giw(mu_loc) 
+subroutine compute_Giw(mu_loc)
 ! input/output
   real(dp), intent(in)       :: mu_loc
 

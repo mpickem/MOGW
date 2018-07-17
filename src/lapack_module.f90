@@ -3,13 +3,13 @@ module Mlapack
   implicit none
   private
   public inverse_matrix
-  
+
   interface inverse_matrix
     module procedure inverse_matrix_d, inverse_matrix_z
   end interface inverse_matrix
-  
+
   contains
-  
+
   subroutine inverse_matrix_z(M)
     implicit none
     complex(dp), intent(inout) :: M(:,:)
@@ -17,7 +17,7 @@ module Mlapack
     integer, allocatable       :: ipiv(:)
     complex(dp), allocatable   :: work(:)
     complex(dp)                :: work_query(1)
-  
+
     ndim = size(M,1)
     allocate(ipiv(ndim))
     call zgetrf(ndim,ndim,M,ndim,ipiv,ierr)
@@ -36,7 +36,7 @@ module Mlapack
     endif
     deallocate(ipiv,work)
   end subroutine inverse_matrix_z
-  
+
   subroutine inverse_matrix_d(M)
     implicit none
     real(dp), intent (inout) :: M(:,:)
@@ -44,7 +44,7 @@ module Mlapack
     integer, allocatable     :: ipiv(:)
     real(dp), allocatable    :: work(:)
     real(dp)                 :: work_query(1)
-  
+
     ndim = size(M,1)
     allocate(ipiv(ndim))
     call dgetrf(ndim,ndim,M,ndim,ipiv,ierr)
@@ -63,5 +63,5 @@ module Mlapack
     end if
     deallocate(ipiv,work)
   end subroutine inverse_matrix_d
-  
+
 end module Mlapack
