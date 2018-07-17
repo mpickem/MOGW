@@ -1,7 +1,13 @@
 module Mhamil
+  use, intrinsic :: iso_c_binding, only: sp=>C_FLOAT, dp=>C_DOUBLE
   use Mglobal
   implicit none
 
+  integer                       :: ndim
+  integer                       :: nkp
+  character(len=100)            :: file_hmlt = ''
+  character(len=100)            :: file_hmlt_kpq = ''
+  character(len=100)            :: file_hmlt_mq = ''
   integer                       :: nsham,ntet
   double precision              :: efermi
   double precision, allocatable :: wtkp(:)
@@ -25,61 +31,60 @@ contains
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
 
 
-       write(*,*) Giw
-       open(unit=77,file=trim(adjustl(file_hmlt)),form='formatted',status='old',iostat=ios,    &
-             action='read',position='rewind' )
-       if( ios /= 0 )then
-         write(6,*)
-         write(6,*)' Cannot open file "HMLT"'
-         stop
-       end if
+    open(unit=77,file=trim(adjustl(file_hmlt)),form='formatted',status='old',iostat=ios,    &
+          action='read',position='rewind' )
+    if( ios /= 0 )then
+      write(6,*)
+      write(6,*)' Cannot open file "HMLT"'
+      stop
+    end if
 
-       read(77,*) nkp,ntet
-       read(77,*) nsham,ndim
+    read(77,*) nkp,ntet
+    read(77,*) nsham,ndim
 
-       allocate( wtkp(nkp),bk(3,nkp) )
+    allocate( wtkp(nkp),bk(3,nkp) )
 
 !   Reading weights and inequivalent k-points from "HMLT"
 
-       read(77,*) efermi
-       read(77,*) (wtkp(i),i=1,nkp)
-       read(77,*) ((bk(i,j),i=1,3),j=1,nkp)
+    read(77,*) efermi
+    read(77,*) (wtkp(i),i=1,nkp)
+    read(77,*) ((bk(i,j),i=1,3),j=1,nkp)
 
 !   Reading inequivalent tetrahedra from file "HMLT"
 
-       if( ntet /= 0 )then
-         allocate( itt(5,ntet) )
-         read(77,*) ((itt(i,j),i=1,5),j=1,ntet)
-       end if
+    if( ntet /= 0 )then
+      allocate( itt(5,ntet) )
+      read(77,*) ((itt(i,j),i=1,5),j=1,ntet)
+    end if
 
 !   Reading Hamiltonian from file "HMLT"
-       allocate( h(ndim,ndim,nkp),hr(ndim,ndim,nkp),hi(ndim,ndim,nkp) )
+    allocate( h(ndim,ndim,nkp),hr(ndim,ndim,nkp),hi(ndim,ndim,nkp) )
 
-       do ikp = 1,nkp
-         read(77,*)((hr(i,j,ikp),j=i,ndim),i=1,ndim)
-         read(77,*)((hi(i,j,ikp),j=i,ndim),i=1,ndim)
-       end do
+    do ikp = 1,nkp
+      read(77,*)((hr(i,j,ikp),j=i,ndim),i=1,ndim)
+      read(77,*)((hi(i,j,ikp),j=i,ndim),i=1,ndim)
+    end do
 
-       h = cmplx( hr,hi )
+    h = cmplx( hr,hi )
 
-       if ( ntet /= 0 )  then
-          deallocate( itt )
-          deallocate( hr,hi,bk )
-       endif
+    if ( ntet /= 0 )  then
+       deallocate( itt )
+       deallocate( hr,hi,bk )
+    endif
 
-       h = Ry2eV * h
-
-
-       forall( i = 1:ndim ) h(i,i,:) = h(i,i,:) - efermi * Ry2eV
-
-       dum=0.d0
-       do i=1,nkp
-          dum=dum+wtkp(i)
-       enddo
-       wtkp=wtkp*2.d0/dum
+    h = Ry2eV * h
 
 
-       close(77)
+    forall( i = 1:ndim ) h(i,i,:) = h(i,i,:) - efermi * Ry2eV
+
+    dum=0.d0
+    do i=1,nkp
+       dum=dum+wtkp(i)
+    enddo
+    wtkp=wtkp*2.d0/dum
+
+
+    close(77)
 !!    end if
 !
 !   Hermitian conjugated
@@ -182,9 +187,9 @@ SUBROUTINE read_bzindices
       open(11,file=file_hmlt_kpq,status='unknown',form='unformatted')
       do ikp=1,nkp
          read(11)(ikpq(ikp,jkp),jkp=ikp,nkp)
-  do jkp=1,ikp-1
-    ikpq(ikp,jkp)=ikpq(jkp,ikp)   ! ikpq(j,i) = ikp(i,j)
-  enddo
+      do jkp=1,ikp-1
+        ikpq(ikp,jkp)=ikpq(jkp,ikp)   ! ikpq(j,i) = ikp(i,j)
+      enddo
       enddo
       close(11)
 

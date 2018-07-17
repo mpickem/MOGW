@@ -1,5 +1,7 @@
 module Mlapack
+  use, intrinsic :: iso_c_binding, only: sp=>C_FLOAT, dp=>C_DOUBLE
   use Mglobal
+
   implicit none
   private
   public inverse_matrix

@@ -1,8 +1,8 @@
 module Mindex
   use Mglobal
   implicit none
-  private
-  public :: index_, inverse_l, inverse_r
+
+  integer :: ndim
 
   contains
 
