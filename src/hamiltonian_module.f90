@@ -24,7 +24,9 @@ contains
     double precision              :: dum
     double precision, allocatable :: hr(:,:,:), hi(:,:,:)
 
-       open( 77,file=file_hmlt,form='formatted',status='old',iostat=ios,    &
+
+       write(*,*) Giw
+       open(unit=77,file=trim(adjustl(file_hmlt)),form='formatted',status='old',iostat=ios,    &
              action='read',position='rewind' )
        if( ios /= 0 )then
          write(6,*)

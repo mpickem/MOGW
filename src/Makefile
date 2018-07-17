@@ -10,7 +10,7 @@ comp.so: computation_module.F90 global.o index_reference.o hamiltonian_module.o 
 glb.so: global.f90
 	$(F2PY) -c -m glb $^ --fcompiler=intelem --quiet
 
-ham.so: hamiltonian_module.f90 global.o
+ham.so: hamiltonian_module.f90 global.f90
 	$(F2PY) -c -m ham $^ --fcompiler=intelem --quiet
 
 %.o: %.f90
