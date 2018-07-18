@@ -1,54 +1,69 @@
 module Mcomp
   use, intrinsic :: iso_c_binding, only: sp=>C_FLOAT, dp=>C_DOUBLE
   use Mglobal
-  use Mindex
   use Mlapack
 
-  integer               :: beta
-  integer               :: mu
+  integer                       :: beta
+  integer                       :: mu
+  integer                       :: ndim
+  integer                       :: nw
 
-  real(dp), allocatable :: wtkp(:)
+  integer                       :: nkp
+  character(len=100)            :: file_hmlt = ''
+  character(len=100)            :: file_hmlt_kpq = ''
+  character(len=100)            :: file_hmlt_mq = ''
+  integer                       :: nsham,ntet
+  double precision              :: efermi
+  double precision, allocatable :: wtkp(:)
+  complex(dp), allocatable      :: h(:,:,:)
+  double precision, allocatable :: bk(:,:)
+  integer, allocatable          :: ikpq(:,:),imq(:)
 
-contains
+  complex(dp), allocatable      :: gkiw(:,:,:,:),Gconv(:,:,:)
+  complex(dp), allocatable      :: P(:,:,:,:)
+  complex(dp), allocatable      :: V(:,:,:,:),Vend(:,:,:)
+  complex(dp), allocatable      :: W(:,:,:,:)
+  complex(dp), allocatable      :: skiw(:,:,:,:)
 
-subroutine compute_giw(Giw, h, SE, mu_loc, nw,ndim,nkp,ikstart,ikend)
-! input/output
-  integer, intent(in)        :: nw,ndim,nkp,ikend,ikstart
-  complex(dp), intent(inout) :: Giw(ndim,ndim,2*nw,nkp)
-  complex(dp), intent(in)    :: h(ndim,ndim,nkp)
-  complex(dp), intent(inout) :: SE(ndim,ndim,2*nw,nkp)
-  real(dp), intent(in)       :: mu_loc
+  real(dp), allocatable         :: U(:,:,:,:)
 
-! auxiliaries
-  integer                    :: ikp,iw,i,j,ina,inb
-  complex(dp), allocatable   :: cmat(:,:)
+  integer                       :: ikstart, ikend
 
-! initialization
-  Giw = 0.d0
-! continuation of Se from nw+1 to 2*nw - required to calculate P
-  do iw=nw+1,2*nw
-    SE(:,:,iw,:) = SE(:,:,nw,:)*real(2*(nw-1)+1,kind=8)/real(2*(iw-1)+1,kind=8)
-  enddo
+  contains
 
-! compute G(k,iw) = [ iw + mu - H(k) - SE(k,iw)]^{-1}
-  allocate(cmat(ndim,ndim))
-  do iw=1,2*nw ! Matsubara frequencies
-    do ikp=ikstart,ikend !1,nkp ! k-points
-      cmat=0.d0
-      do i=1,ndim ! orbitals
-         cmat(i,i) = ci * real(2*(iw-1)+1,kind=8)*pi/beta + mu_loc
-      enddo
-      ! iw + mu - H(k) - SE :
-      cmat(:,:)=cmat(:,:)-h(:,:,ikp)-SE(:,:,iw,ikp)
-      ! [iw + mu - H(k) - Sigma(w,k) ]^{-1} :
-      call inverse_matrix( cmat ) ! inverts complex square matrix
-      Giw(:,:,iw,ikp)=cmat
-    enddo ! ikp
-  enddo !iw
-  deallocate(cmat)
+  subroutine compute_gkiw(mu_loc)
+    real(dp), intent(in)      :: mu_loc
+  ! auxiliaries
+    integer                  :: ikp,iw,i,j,ina,inb
+    complex(dp), allocatable :: cmat(:,:)
 
-  return
-end subroutine compute_giw
+
+  ! initialization
+    gkiw = 0.d0
+  ! continuation of Se from nw+1 to 2*nw - required to calculate P
+    do iw=nw+1,2*nw
+      skiw(:,:,iw,:) = skiw(:,:,nw,:)*real(2*(nw-1)+1,kind=8)/real(2*(iw-1)+1,kind=8)
+    enddo
+
+  ! compute G(k,iw) = [ iw + mu - H(k) - skiw(k,iw)]^{-1}
+    allocate(cmat(ndim,ndim))
+    do iw=1,2*nw ! Matsubara frequencies
+      do ikp=ikstart,ikend !1,nkp ! k-points
+        cmat=0.d0
+        do i=1,ndim ! orbitals
+           cmat(i,i) = ci * real(2*(iw-1)+1,kind=8)*pi/beta + mu_loc
+        enddo
+        ! iw + mu - H(k) - skiw :
+        cmat(:,:)=cmat(:,:)-h(:,:,ikp)-skiw(:,:,iw,ikp)
+        ! [iw + mu - H(k) - Sigma(w,k) ]^{-1} :
+        call inverse_matrix( cmat ) ! inverts complex square matrix
+        gkiw(:,:,iw,ikp)=cmat
+      enddo ! ikp
+    enddo !iw
+    deallocate(cmat)
+
+    return
+  end subroutine compute_gkiw
 
 ! subroutine compute_Gconv(h)
   !complex(dp), intent(in) :: h(ndim,ndim,nkp)
@@ -390,40 +405,252 @@ end subroutine compute_giw
 
 !!##########################################
 
-subroutine compute_n(Giw, ncur, trace,ndim,nkp,nw)
-! input/output
-  integer, intent(in)        :: ndim,nkp,nw
-  complex(dp), intent(in)    :: Giw(ndim,ndim,2*nw,nkp)
-  complex(dp), intent(inout) :: ncur(ndim,ndim)
-  complex(dp), intent(out)   :: trace
+  subroutine compute_n(trace)
+  ! input/output
+    complex(dp), intent(out) :: trace
 
-! auxiliaries
-  integer                      :: iw,ikp,i,j
-! initialization
-  ncur=0.d0
+  ! auxiliaries
+    integer                  :: iw,ikp,i,j
+    complex(dp)              :: ncur(ndim,ndim)
+  ! initialization
+    ncur=0.d0
 
-  do ikp=1,nkp
-  do iw=1,2*nw
-    do j=1,ndim
+    do ikp=1,nkp
+    do iw=1,2*nw
+      do j=1,ndim
+      do i=1,ndim
+        ncur(i,j) = ncur(i,j) + (gkiw(i,j,iw,ikp) + conjg(gkiw(j,i,iw,ikp))) * wtkp(ikp)
+      enddo
+      enddo
+    enddo
+    enddo
+
+    ncur = ncur/beta  ! common prefactor, no factor of 2 for spin summation, since sum_ikp wtkp(ikp) = 2
+
     do i=1,ndim
-      ncur(i,j) = ncur(i,j) + (Giw(i,j,iw,ikp) + conjg(Giw(j,i,iw,ikp))) * wtkp(ikp)
+      ncur(i,i)= ncur(i,i) + 1.d0
+    enddo
+
+    trace=0.d0
+    do i=1,ndim
+      trace=trace+ncur(i,i)
+    enddo
+
+    return
+  end subroutine compute_n
+
+  subroutine read_hamiltonian
+!   fills wtkp, h, bk
+!
+!   Reads hamiltonian form disk file
+!
+    implicit none
+
+    integer               :: i, j, ikp, ios, ntet
+    integer, allocatable  :: itt(:,:)
+    real(dp), parameter   :: Ry2eV = 1.36058d+1
+    real(dp)              :: dum
+    real(dp), allocatable :: hr(:,:,:), hi(:,:,:)
+
+
+    open(unit=77,file=trim(adjustl(file_hmlt)),form='formatted',status='old',iostat=ios,    &
+          action='read',position='rewind' )
+    if( ios /= 0 )then
+      write(6,*)
+      write(6,*)' Cannot open file "HMLT"'
+      stop
+    end if
+
+    read(77,*) nkp,ntet
+    read(77,*) nsham,ndim
+
+    allocate( wtkp(nkp),bk(3,nkp) )
+
+!   Reading weights and inequivalent k-points from "HMLT"
+
+    read(77,*) efermi
+    read(77,*) (wtkp(i),i=1,nkp)
+    read(77,*) ((bk(i,j),i=1,3),j=1,nkp)
+
+!   Reading inequivalent tetrahedra from file "HMLT"
+
+    if( ntet /= 0 )then
+      allocate( itt(5,ntet) )
+      read(77,*) ((itt(i,j),i=1,5),j=1,ntet)
+    end if
+
+!   Reading Hamiltonian from file "HMLT"
+    allocate( h(ndim,ndim,nkp),hr(ndim,ndim,nkp),hi(ndim,ndim,nkp) )
+
+    do ikp = 1,nkp
+      read(77,*)((hr(i,j,ikp),j=i,ndim),i=1,ndim)
+      read(77,*)((hi(i,j,ikp),j=i,ndim),i=1,ndim)
+    end do
+
+    h = cmplx( hr,hi )
+
+    if ( ntet /= 0 )  then
+       deallocate( itt )
+       deallocate( hr,hi,bk )
+    endif
+
+    h = Ry2eV * h
+
+
+    forall( i = 1:ndim ) h(i,i,:) = h(i,i,:) - efermi * Ry2eV
+
+    dum=0.d0
+    do i=1,nkp
+       dum=dum+wtkp(i)
+    enddo
+    wtkp=wtkp*2.d0/dum
+
+
+    close(77)
+!!    end if
+!
+!   Hermitian conjugated
+!
+    do i = 1,ndim-1
+      do j = i+1,ndim
+        h(j,i,:) =  conjg(h(i,j,:))
+      end do
+    end do
+
+  end subroutine read_hamiltonian
+
+
+  subroutine read_hamiltonian_n(ch)
+!
+!   Reads hamiltonian form disk file
+!
+    implicit none
+
+    integer                       :: i, j, ikp, ios, ntet
+    integer, allocatable          :: itt(:,:)
+    double precision, parameter   :: Ry2eV = 1.36058d+1
+    double precision              :: efermi
+    double precision, allocatable :: hr(:,:,:), hi(:,:,:)
+    character(len=*), intent(in)  :: ch
+
+       open( 77,file=ch,form='formatted',status='old',iostat=ios,    &
+             action='read',position='rewind' )
+       if( ios /= 0 )then
+         write(6,*)
+         write(6,*)' Cannot open file '//ch
+         stop
+       end if
+
+       read(77,*) nkp,ntet
+       read(77,*) nsham,ndim
+
+       allocate( wtkp(nkp),bk(3,nkp) )
+
+!   Reading weights and inequivalent k-points from "HMLT"
+
+       read(77,*) efermi
+       read(77,*) (wtkp(i),i=1,nkp)
+       read(77,*) ((bk(i,j),i=1,3),j=1,nkp)
+
+!   Reading inequivalent tetrahedra from file "HMLT"
+
+       if( ntet /= 0 )then
+         allocate( itt(5,ntet) )
+         read(77,*) ((itt(i,j),i=1,5),j=1,ntet)
+       end if
+
+!   Reading Hamiltonian from file "HMLT"
+       allocate( h(ndim,ndim,nkp),hr(ndim,ndim,nkp),hi(ndim,ndim,nkp) )
+
+       do ikp = 1,nkp
+         read(77,*)((hr(i,j,ikp),j=i,ndim),i=1,ndim)
+         read(77,*)((hi(i,j,ikp),j=i,ndim),i=1,ndim)
+       end do
+
+       h = cmplx( hr,hi )
+
+       if ( ntet /= 0 )  then
+          deallocate( itt )
+          deallocate( hr,hi,bk )
+       endif
+
+       h = Ry2eV * h
+
+
+       forall( i = 1:ndim ) h(i,i,:) = h(i,i,:) - efermi * Ry2eV
+
+       close(77)
+!
+!   Hermitian conjugated
+!
+    do i = 1,ndim-1
+      do j = i+1,ndim
+        h(j,i,:) =  conjg(h(i,j,:))
+      end do
+    end do
+
+  end subroutine read_hamiltonian_n
+
+  subroutine deallocate_ham
+      implicit none
+      deallocate(h,bk,wtkp)
+  end subroutine deallocate_ham
+
+
+
+  SUBROUTINE read_bzindices
+    ! fills imq, ikpq
+    implicit none
+    integer :: ikp,jkp
+
+    allocate(imq(nkp),ikpq(nkp,nkp))
+
+    ikpq=0
+    open(11,file=file_hmlt_kpq,status='unknown',form='unformatted')
+    do ikp=1,nkp
+       read(11)(ikpq(ikp,jkp),jkp=ikp,nkp)
+    do jkp=1,ikp-1
+      ikpq(ikp,jkp)=ikpq(jkp,ikp)   ! ikpq(j,i) = ikp(i,j)
     enddo
     enddo
-  enddo
-  enddo
+    close(11)
 
-  ncur = ncur/beta  ! common prefactor, no factor of 2 for spin summation, since sum_ikp wtkp(ikp) = 2
-
-  do i=1,ndim
-    ncur(i,i)= ncur(i,i) + 1.d0
-  enddo
-
-  trace=0.d0
-  do i=1,ndim
-    trace=trace+ncur(i,i)
-  enddo
+    open(11,file=file_hmlt_mq,status='unknown',form='unformatted')
+    read(11)(imq(ikp),ikp=1,nkp)
+    close(11)
 
   return
-end subroutine compute_n
+  end SUBROUTINE read_bzindices
+
+  ! subroutine index_(x,y)  ! x - left compound index --- y - right compound index
+  ! ! this can also be done via a function written like below - however it is faster to do one loop since every index is used anyways
+  !   integer, intent(out) :: x(ndim,ndim),y(ndim,ndim)  ! x = 1 ... ndim**2 = y ---- Polarization arrays have to be changed
+  !   integer              :: cnt,i,j
+
+  !   cnt=1
+
+  !   do i=1,ndim
+  !   do j=1,ndim
+  !     x(i,j) = cnt ! 11, 12, 13, ..., 21, 22, 23, ...
+  !     y(j,i) = cnt ! 11, 21, 31, ..., 12, 22, 32, ...
+  !     cnt = cnt+1
+  !   enddo
+  !   enddo
+
+  ! end subroutine index_
+
+  ! integer function inverse_l(i) ! i -> L (from LL_) --- j -> L_ (from L_L)
+  !   integer,intent(in) :: i
+  !   inverse_l=(i-1)/ndim+1 ! integer division
+  !   return
+  ! end function inverse_l
+
+  ! integer function inverse_r(i) ! i -> L_ (from LL_) --- j -> L (from L_L)
+  !   integer,intent(in) :: i
+  !   inverse_r=mod(i-1,ndim)+1
+  !   return
+  ! end function inverse_r
+
+
 
 end module Mcomp
